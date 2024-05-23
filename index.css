@@ -1,0 +1,41 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --board-background-color: radial-gradient(circle at center, #73A57E, #4B6952);
+  --card-background-color: #FFF;
+  --card-width: 120px;
+  --card-height: 200px;
+  --card-border-radius: 10px;
+  --card-number-font-size: 68px;
+  --red-color: #D60000;
+}
+
+.board {
+  width: 100vw;
+  height: 100vh;
+  background: var(--board-background-color);
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  background-color: var(--card-background-color);
+  border-radius: var(--card-border-radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px;
+
+  img:last-child {
+    align-self: end;
+    rotate: -180deg;
+  }
+
+  h1 {
+    align-self: center;
+    font-size: var(--card-number-font-size);
+  }
+}
