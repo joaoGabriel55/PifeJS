@@ -1,13 +1,13 @@
+function createIcon(suit) {
+  const icon = document.createElement("img");
+  icon.src = `assets/${suit}.svg`;
+  icon.width = 32;
+  icon.height = 32;
+
+  return icon;
+}
+
 function createCard({ suit, value, isFaceUp }) {
-  function createIcon(suit) {
-    const icon = document.createElement("img");
-    icon.src = `assets/${suit}.svg`;
-    icon.width = 32;
-    icon.height = 32;
-
-    return icon;
-  }
-
   const card = document.createElement("div");
   card.className = `card ${isFaceUp ? 'face-up' : 'face-down'}`;
 
@@ -22,50 +22,87 @@ function createCard({ suit, value, isFaceUp }) {
     card.append(createIcon(suit), cardValue, createIcon(suit));
   }
 
+  card.setAttribute("draggable", true);
+
   return card;
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  const player1Hand = document.getElementById("opponent");
-  const player2Hand = document.getElementById("player");
-  const deck = document.querySelector(".deck .content");
+function shuffleDeck(deck) {
+  const deckCopy = [...deck];
+  let currentIndex = deckCopy.length;
 
-  const opponentCards = [
-    { suit: "club", value: "A" },
-    { suit: "diamond", value: "2" },
-    { suit: "heart", value: "3" },
-    { suit: "heart", value: "3" },
-    { suit: "heart", value: "3" },
-    { suit: "heart", value: "3" },
-    { suit: "heart", value: "3" },
-    { suit: "heart", value: "3" },
-    { suit: "heart", value: "3" },
-  ];
+  while (currentIndex != 0) {
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
 
-  const playerCards = [
-    { suit: "spade", value: "K" },
-    { suit: "club", value: "Q" },
-    { suit: "diamond", value: "J" }
-  ];
-
-  function populatePlayerCards(playerHand, cards, isFaceUp) {
-    cards.forEach(card => {
-      card.isFaceUp = isFaceUp;
-      const newCard = createCard(card);
-      playerHand.appendChild(newCard);
-    });
+    [deckCopy[currentIndex], deckCopy[randomIndex]] = [
+      deckCopy[randomIndex], deckCopy[currentIndex]];
   }
 
-  populatePlayerCards(deck, opponentCards, false);
+  return deckCopy;
+}
 
-  populatePlayerCards(player1Hand, opponentCards, false);
+function distributeCards(deck) {
+  const deckCopy = [...deck];
+  const playerCards = deckCopy.splice(0, NUMBER_OF_CARDS_PER_PLAYER);
+  const opponentCards = deckCopy.splice(0, NUMBER_OF_CARDS_PER_PLAYER);
 
-  populatePlayerCards(player2Hand, playerCards, true);
+  return {
+    deck: deckCopy,
+    playerCards,
+    opponentCards
+  };
+}
+
+function drawCard() {}
+
+function discardCard() {}
+
+function populatePlayerCards(playerHand, cards, isFaceUp) {
+  return cards.map(card => {
+    card.isFaceUp = isFaceUp;
+    const newCard = createCard(card);
+    playerHand.appendChild(newCard);
+    return newCard;
+  });
+}
+
+function renderRestOfCards(cards) {
+  const deckDiv = document.querySelector(".deck .content");
+
+  cards.forEach(card => {
+    card.isFaceUp = false;
+    const newCard = createCard(card);
+    deckDiv.appendChild(newCard);
+  });
 
   const deckCards = document.querySelectorAll(".deck .content .card");
-  
-  deckCards.forEach((card, index) => {
-    card.style.transform = `translate(${index * -20}px, 0)`;
-  });
-});
 
+  deckCards.forEach((card, index) => {
+    card.style.transform = `translate(${index * -5}px, 0)`;
+  });
+
+  if (deckCards.length > 0) {
+    const topCard = deckCards[deckCards.length - 1];
+    const topCardData = cards[cards.length - 1];
+    topCard.addEventListener("click", () => flipCard(topCard, topCardData.suit, topCardData.value));
+  }
+}
+
+function flipCard(card, suit, value) {
+  if (card.classList.contains("face-down")) {
+    card.classList.remove("face-down");
+    card.classList.add("face-up");
+
+    const cardValue = document.createElement("h1");
+    cardValue.innerText = value;
+    cardValue.style.color = "black";
+
+    if (["heart", "diamond"].includes(suit)) {
+      cardValue.style.color = "var(--red-color)";
+    }
+
+    card.innerHTML = "";
+    card.append(createIcon(suit), cardValue, createIcon(suit));
+  }
+}

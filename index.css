@@ -8,7 +8,7 @@
   --card-background-color: #FFF;
   --face-down-card-background-color: radial-gradient(circle at center, #A80000, #6E1919);
   --card-width: 120px;
-  --card-height: 200px;
+  --card-height: 180px;
   --card-border-radius: 10px;
   --card-number-font-size: 68px;
   --red-color: #D60000;
@@ -29,6 +29,7 @@
   height: var(--card-height);
   border-radius: var(--card-border-radius);
   padding: var(--card-padding);
+  /* cursor: grab; */
 
   &.face-up {
     display: flex;
@@ -57,7 +58,7 @@
   display: flex;
   justify-content: center;
   gap: 256px;
-  height: 260px;
+  height: 300px;
   font-size: 28px;
   font-weight: 400;
 
