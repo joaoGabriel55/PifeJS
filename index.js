@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
   const opponentDiv = document.getElementById("opponent");
   const playerDiv = document.getElementById("player");
-  
+
   const shuffledDeck = shuffleDeck(DECK);
   const { deck, playerCards, opponentCards } = distributeCards(shuffledDeck);
 
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function handleDragStart(e) {
     this.style.opacity = '0.4';
-    
+
     dragSrcEl = this;
 
     e.dataTransfer.effectAllowed = 'move';
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     e.dataTransfer.dropEffect = 'move';
-    
+
     return false;
   }
 
@@ -33,17 +33,18 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.stopPropagation) {
       e.stopPropagation();
     }
-    
-    if (dragSrcEl != this) {
+
+    if (dragSrcEl && dragSrcEl != this) {
       dragSrcEl.innerHTML = this.innerHTML;
       this.innerHTML = e.dataTransfer.getData('text/html');
     }
-    
+
     return false;
   }
 
   function handleDragEnd(e) {
     this.style.opacity = '1';
+    dragSrcEl = null;
   }
 
   playerCardElements.forEach((card) => {
