@@ -54,14 +54,26 @@ function distributeCards(deck) {
   };
 }
 
-function drawCard() {}
+function drawCard({ targetIndex, cards, drawnCard }) {
+  const discardedCard = cards[targetIndex];
+
+  cards[targetIndex] = drawnCard;
+  const { value, suit } = drawnCard;
+
+  return {
+    cardContent: createCard({ value, suit, isFaceUp: true }).innerHTML,
+    discardedCard 
+  };
+}
 
 function discardCard() {}
 
 function populatePlayerCards(playerHand, cards, isFaceUp) {
-  return cards.map(card => {
+  return cards.map((card, index) => {
     card.isFaceUp = isFaceUp;
     const newCard = createCard(card);
+    newCard.dataset.index = index;
+    newCard.dataset.player = 'player';
     playerHand.appendChild(newCard);
     return newCard;
   });
@@ -104,5 +116,27 @@ function flipCard(card, suit, value) {
 
     card.innerHTML = "";
     card.append(createIcon(suit), cardValue, createIcon(suit));
+
+    card.addEventListener("dragstart", handleDeckDragStart);
+    card.addEventListener("dragover", handleDragOver);
+    card.addEventListener("dragend", handleDeckDragEnd);  
+  }
+}
+
+function swapPlayerCards({ cards, sourceIndex, targetIndex }) {
+  const sourceCard = cards[sourceIndex];
+  const targetCard = cards[targetIndex];
+
+  cards[sourceIndex] = targetCard;
+  cards[targetIndex] = sourceCard;
+}
+
+function updateRestOfCardsTop(cards) {
+  const deckCards = document.querySelectorAll(".deck .content .card");
+
+  if (deckCards.length > 0) {
+    const topCard = deckCards[deckCards.length - 1];
+    const topCardData = cards[cards.length - 1];
+    topCard.addEventListener("click", () => flipCard(topCard, topCardData.suit, topCardData.value));
   }
 }
