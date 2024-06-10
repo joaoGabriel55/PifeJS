@@ -1,3 +1,5 @@
+const eventBus = new Comment('event-bus');
+
 function createIcon(suit) {
   const icon = document.createElement("img");
   icon.src = `assets/${suit}.svg`;
@@ -116,10 +118,6 @@ function flipCard(card, suit, value) {
 
     card.innerHTML = "";
     card.append(createIcon(suit), cardValue, createIcon(suit));
-
-    card.addEventListener("dragstart", handleDeckDragStart);
-    card.addEventListener("dragover", handleDragOver);
-    card.addEventListener("dragend", handleDeckDragEnd);  
   }
 }
 
@@ -129,14 +127,4 @@ function swapPlayerCards({ cards, sourceIndex, targetIndex }) {
 
   cards[sourceIndex] = targetCard;
   cards[targetIndex] = sourceCard;
-}
-
-function updateRestOfCardsTop(cards) {
-  const deckCards = document.querySelectorAll(".deck .content .card");
-
-  if (deckCards.length > 0) {
-    const topCard = deckCards[deckCards.length - 1];
-    const topCardData = cards[cards.length - 1];
-    topCard.addEventListener("click", () => flipCard(topCard, topCardData.suit, topCardData.value));
-  }
 }

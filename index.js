@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", initGame);
+
+function initGame() {
   const opponentDiv = document.getElementById("opponent");
   const playerDiv = document.getElementById("player");
   const deckDiv = document.getElementById("deck-pile");
@@ -10,24 +12,40 @@ document.addEventListener("DOMContentLoaded", function () {
   populatePlayerCards(opponentDiv, opponentCards, false);
   const playerCardElements = populatePlayerCards(playerDiv, playerCards, true);
 
+  addDragAndDropEvents(playerCardElements);
+
+  renderRestOfCards(deck);
+
+  addDeckDragAndDropEvent();
+
+  eventBus.addEventListener('test-event', ({ detail}) => {
+    addDeckDragAndDropEvent();
+  });
+
   let dragSrcEl = null;
 
-  function handleDragStart(srcElement) {
-    return function(e) {
-      this.style.opacity = "0.4";
+  function addDragAndDropEvents(cardElements) {
+    cardElements.forEach((card) => {
+      card.addEventListener("dragstart", handleDragStart);
+      card.addEventListener("dragover", handleDragOver);
+      card.addEventListener("drop", handleDrop);
+      card.addEventListener("dragend", handleDragEnd);
+    });
+  }
 
-      srcElement = this;
+  function handleDragStart(e) {
+    this.style.opacity = "0.4";
 
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/html", this.innerHTML);
-      e.dataTransfer.setData("text/plain", this.dataset.index);
-    }
+    dragSrcEl = this;
+
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", this.innerHTML);
+    e.dataTransfer.setData("text/plain", this.dataset.index);
+
   }
 
   function handleDragOver(e) {
-    if (e.preventDefault) {
-      e.preventDefault();
-    }
+    if (e.preventDefault) e.preventDefault();
 
     e.dataTransfer.dropEffect = "move";
 
@@ -35,34 +53,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function handleDrop(e) {
-    if (e.stopPropagation) {
-      e.stopPropagation();
-    }
-
-    if (!dragSrcEl) {
-      return;
-    }
-
-    const srcIndex = dragSrcEl.dataset.index;
+    if (e.stopPropagation) e.stopPropagation();
+    if (!dragSrcEl) return;
 
     if (dragSrcEl.parentNode === deckDiv) {
-      const drawnCard = deck.pop();
-      if (this.dataset.player === "player") {
-        const targetIndex = Number(this.dataset.index);
-
-        const { cardContent, discardedCard } = drawCard({ targetIndex, cards: playerCards, drawnCard });
-
-        playerDiv.children[targetIndex].innerHTML = cardContent;
-        discardPileDiv.appendChild(createCard(discardedCard));
-      } else if (this.classList.contains("discarded-cards")) {
-        // discardPileDiv.appendChild(createCard(drawnCard));
-      }
-      dragSrcEl.remove();
+      handleDeckCardDrop(dragSrcEl, this);
     } else if (dragSrcEl != this) {
-      swapPlayerCards({ cards: playerCards, sourceIndex: srcIndex, targetIndex: this.dataset.index });
-
-      dragSrcEl.innerHTML = this.innerHTML;
-      this.innerHTML = e.dataTransfer.getData("text/html");
+      const content = e.dataTransfer.getData("text/html");
+      handlePlayerCardSwap(dragSrcEl, this, content);
     }
 
     return false;
@@ -82,17 +80,52 @@ document.addEventListener("DOMContentLoaded", function () {
     e.dataTransfer.setData("text/html", this.innerHTML);
   }
 
-  function handleDeckDragEnd(e) {
-    this.style.opacity = "1";
-    dragSrcEl = null;
+  function handleDeckCardDrop(sourceElement, targetElement) {
+    const drawnCard = deck.pop();
+
+    if (targetElement.dataset.player === "player") {
+      const targetIndex = Number(targetElement.dataset.index);
+      const { cardContent, discardedCard } = drawCard({ targetIndex, cards: playerCards, drawnCard });
+
+      drawCard(targetIndex, cardContent, discardedCard);
+    }
+
+    sourceElement.remove();
   }
 
-  playerCardElements.forEach((card) => {
-    card.addEventListener("dragstart", handleDragStart);
-    card.addEventListener("dragover", handleDragOver);
-    card.addEventListener("drop", handleDrop);
-    card.addEventListener("dragend", handleDragEnd);
-  });
+  function drawCard(targetIndex, cardContent, discardedCard) {
+    const playerDiv = document.getElementById("player");
+    const discardPileDiv = document.getElementById("discard-pile");
+    const deckCards = document.querySelectorAll(".deck .content .card");
+    const topCard = deckCards.item(deckCards.length - 1);
 
-  renderRestOfCards(deck);
-});
+    playerDiv.children[targetIndex].innerHTML = cardContent;
+    discardPileDiv.appendChild(createCard(discardedCard));
+
+    topCard.remove();
+
+    eventBus.dispatchEvent(new CustomEvent('test-event', { detail: 'data' }));
+  }
+
+  function handlePlayerCardSwap(sourceElement, targetElement, content) {
+    const sourceIndex = sourceElement.dataset.index;
+    const targetIndex = targetElement.dataset.index;
+
+    swapPlayerCards({ cards: playerCards, sourceIndex, targetIndex });
+
+    sourceElement.innerHTML = targetElement.innerHTML;
+    targetElement.innerHTML = content;
+  }
+
+  function addDeckDragAndDropEvent() {
+    const deckCards = document.querySelectorAll(".deck .content .card");
+    const topCard = deckCards.item(deckCards.length - 1);
+    const topCardData = deck[deck.length - 1];
+
+    topCard.addEventListener("dragstart", handleDeckDragStart);
+    topCard.addEventListener("dragover", handleDragOver);
+    topCard.addEventListener("dragend", handleDragEnd);
+
+    topCard.addEventListener("click", () => flipCard(topCard, topCardData.suit, topCardData.value));
+  }
+}
