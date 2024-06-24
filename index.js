@@ -18,6 +18,9 @@ function initGame() {
 
   addDeckDragAndDropEvent();
 
+  discardPileDiv.addEventListener("drop", handleDrop);
+  discardPileDiv.addEventListener("dragover", handleDragOver);
+
   eventBus.addEventListener('test-event', ({ detail}) => {
     addDeckDragAndDropEvent();
   });
@@ -41,7 +44,6 @@ function initGame() {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/html", this.innerHTML);
     e.dataTransfer.setData("text/plain", this.dataset.index);
-
   }
 
   function handleDragOver(e) {
@@ -55,8 +57,9 @@ function initGame() {
   function handleDrop(e) {
     if (e.stopPropagation) e.stopPropagation();
     if (!dragSrcEl) return;
+    if (!deck[deck.length - 1].isFaceUp) return;
 
-    if (dragSrcEl.parentNode === deckDiv) {
+    if (dragSrcEl.parentNode === deckDiv || dragSrcEl.parentNode === discardPileDiv) {
       handleDeckCardDrop(dragSrcEl, this);
     } else if (dragSrcEl != this) {
       const content = e.dataTransfer.getData("text/html");
@@ -81,26 +84,34 @@ function initGame() {
   }
 
   function handleDeckCardDrop(sourceElement, targetElement) {
-    const drawnCard = deck.pop();
-
     if (targetElement.dataset.player === "player") {
+      const drawnCard = deck.pop();
+
       const targetIndex = Number(targetElement.dataset.index);
       const { cardContent, discardedCard } = drawCard({ targetIndex, cards: playerCards, drawnCard });
 
-      drawCard(targetIndex, cardContent, discardedCard);
+      updatePlayerAndDiscardPiles(targetIndex, cardContent, discardedCard);
+    } else {
+      discardCard();
     }
 
     sourceElement.remove();
   }
 
-  function drawCard(targetIndex, cardContent, discardedCard) {
+  function updatePlayerAndDiscardPiles(targetIndex, cardContent, discardedCard) {
     const playerDiv = document.getElementById("player");
-    const discardPileDiv = document.getElementById("discard-pile");
     const deckCards = document.querySelectorAll(".deck .content .card");
     const topCard = deckCards.item(deckCards.length - 1);
+    const discardedPileContent = document.querySelector(".discarded-cards .content");
 
     playerDiv.children[targetIndex].innerHTML = cardContent;
-    discardPileDiv.appendChild(createCard(discardedCard));
+    discardedPileContent.appendChild(createCard({ ...discardedCard, isFaceUp: true }));
+
+    const cards = document.querySelectorAll(".discarded-cards .content .card");
+
+    cards.forEach((card, index) => {
+      card.style.transform = `translate(${index * -5}px, 0)`;
+    });
 
     topCard.remove();
 
@@ -126,6 +137,27 @@ function initGame() {
     topCard.addEventListener("dragover", handleDragOver);
     topCard.addEventListener("dragend", handleDragEnd);
 
-    topCard.addEventListener("click", () => flipCard(topCard, topCardData.suit, topCardData.value));
+    topCard.addEventListener("click", () => {
+      deck[deck.length - 1].isFaceUp = true;
+      flipCard(topCard, topCardData.suit, topCardData.value)
+    });
+  }
+
+  function discardCard() {
+    const discardedPileContent = document.querySelector(".discarded-cards .content");
+    const deckCards = document.querySelectorAll(".deck .content .card");
+    const topCard = deckCards.item(deckCards.length - 1);
+    const topCardData = deck.pop();
+
+    discardedPileContent.appendChild(createCard({ ...topCardData, isFaceUp: true }));
+    topCard.remove();
+
+    eventBus.dispatchEvent(new CustomEvent('test-event', { detail: 'data' }));
+
+    const cards = document.querySelectorAll(".discarded-cards .content .card");
+
+    cards.forEach((card, index) => {
+      card.style.transform = `translate(${index * -5}px, 0)`;
+    });
   }
 }

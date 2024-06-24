@@ -29,7 +29,6 @@
   height: var(--card-height);
   border-radius: var(--card-border-radius);
   padding: var(--card-padding);
-  /* cursor: grab; */
 
   &.face-up {
     display: flex;
@@ -75,6 +74,22 @@
 
       .card {
         position: absolute;
+      }
+    }
+  }
+
+  .discarded-cards {
+    h2 {
+      color: white;
+    }
+
+    .content {
+      display: flex;
+      position: relative;
+
+      .card {
+        position: absolute;
+        box-shadow: 6px 4px 10px 0 rgba(0, 0, 0, 0.5);
       }
     }
   }

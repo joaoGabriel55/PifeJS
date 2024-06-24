@@ -68,8 +68,6 @@ function drawCard({ targetIndex, cards, drawnCard }) {
   };
 }
 
-function discardCard() {}
-
 function populatePlayerCards(playerHand, cards, isFaceUp) {
   return cards.map((card, index) => {
     card.isFaceUp = isFaceUp;
@@ -99,7 +97,10 @@ function renderRestOfCards(cards) {
   if (deckCards.length > 0) {
     const topCard = deckCards[deckCards.length - 1];
     const topCardData = cards[cards.length - 1];
-    topCard.addEventListener("click", () => flipCard(topCard, topCardData.suit, topCardData.value));
+    topCard.addEventListener("click", () => {
+      cards[cards.length - 1].isFaceUp = true;
+      flipCard(topCard, topCardData.suit, topCardData.value);
+    });
   }
 }
 
