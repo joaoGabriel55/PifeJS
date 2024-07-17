@@ -1,4 +1,4 @@
-const eventBus = new Comment('event-bus');
+import { NUMBER_OF_CARDS_PER_PLAYER } from "./constants.js";
 
 function createIcon(suit) {
   const icon = document.createElement("img");
@@ -9,7 +9,7 @@ function createIcon(suit) {
   return icon;
 }
 
-function createCard({ suit, value, isFaceUp }) {
+export function createCard({ suit, value, isFaceUp }) {
   const card = document.createElement("div");
   card.className = `card ${isFaceUp ? 'face-up' : 'face-down'}`;
 
@@ -29,57 +29,43 @@ function createCard({ suit, value, isFaceUp }) {
   return card;
 }
 
-function shuffleDeck(deck) {
-  const deckCopy = [...deck];
-  let currentIndex = deckCopy.length;
+export function shuffleDeck(deck) {
+  let currentIndex = deck.length;
 
   while (currentIndex != 0) {
     let randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
 
-    [deckCopy[currentIndex], deckCopy[randomIndex]] = [
-      deckCopy[randomIndex], deckCopy[currentIndex]];
+    [deck[currentIndex], deck[randomIndex]] = [
+      deck[randomIndex], deck[currentIndex]];
   }
 
-  return deckCopy;
+  return deck;
 }
 
-function distributeCards(deck) {
-  const deckCopy = [...deck];
-  const playerCards = deckCopy.splice(0, NUMBER_OF_CARDS_PER_PLAYER);
-  const opponentCards = deckCopy.splice(0, NUMBER_OF_CARDS_PER_PLAYER);
+export function distributeCards(deck) {
+  const playerHand = deck.splice(0, NUMBER_OF_CARDS_PER_PLAYER);
+  const opponentHand = deck.splice(0, NUMBER_OF_CARDS_PER_PLAYER);
 
   return {
-    deck: deckCopy,
-    playerCards,
-    opponentCards
+    deck,
+    playerHand,
+    opponentHand
   };
 }
 
-function drawCard({ targetIndex, cards, drawnCard }) {
-  const discardedCard = cards[targetIndex];
-
-  cards[targetIndex] = drawnCard;
-  const { value, suit } = drawnCard;
-
-  return {
-    cardContent: createCard({ value, suit, isFaceUp: true }).innerHTML,
-    discardedCard 
-  };
-}
-
-function populatePlayerCards(playerHand, cards, isFaceUp) {
+export function renderPlayersCards(playerDiv, cards, isFaceUp) {
   return cards.map((card, index) => {
     card.isFaceUp = isFaceUp;
     const newCard = createCard(card);
     newCard.dataset.index = index;
     newCard.dataset.player = 'player';
-    playerHand.appendChild(newCard);
+    playerDiv.appendChild(newCard);
     return newCard;
   });
 }
 
-function renderRestOfCards(cards) {
+export function renderDeck(cards, eventNotifier) {
   const deckDiv = document.querySelector(".deck .content");
 
   cards.forEach(card => {
@@ -98,13 +84,13 @@ function renderRestOfCards(cards) {
     const topCard = deckCards[deckCards.length - 1];
     const topCardData = cards[cards.length - 1];
     topCard.addEventListener("click", () => {
-      cards[cards.length - 1].isFaceUp = true;
+      eventNotifier.publish({ type: "SHOW_DECK_TOP_CARD" });
       flipCard(topCard, topCardData.suit, topCardData.value);
     });
   }
 }
 
-function flipCard(card, suit, value) {
+export function flipCard(card, suit, value) {
   if (card.classList.contains("face-down")) {
     card.classList.remove("face-down");
     card.classList.add("face-up");
@@ -120,12 +106,4 @@ function flipCard(card, suit, value) {
     card.innerHTML = "";
     card.append(createIcon(suit), cardValue, createIcon(suit));
   }
-}
-
-function swapPlayerCards({ cards, sourceIndex, targetIndex }) {
-  const sourceCard = cards[sourceIndex];
-  const targetCard = cards[targetIndex];
-
-  cards[sourceIndex] = targetCard;
-  cards[targetIndex] = sourceCard;
 }

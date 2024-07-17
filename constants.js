@@ -1,4 +1,4 @@
-const DECK = [
+export const DECK = [
   { value: 'A', suit: 'club' },
   { value: 'A', suit: 'diamond' },
   { value: 'A', suit: 'heart' },
@@ -53,7 +53,7 @@ const DECK = [
   { value: 'K', suit: 'spade' },
 ];
 
-const NUMBER_OF_CARDS_PER_PLAYER = 9;
-const PLAYERS_NUMBER = 2;
-const NUMBER_OF_CARDS_TO_DISTRIBUTE = NUMBER_OF_CARDS_PER_PLAYER * PLAYERS_NUMBER;
-const SET_SIZE = 3;
+export const NUMBER_OF_CARDS_PER_PLAYER = 9;
+export const PLAYERS_NUMBER = 2;
+export const NUMBER_OF_CARDS_TO_DISTRIBUTE = NUMBER_OF_CARDS_PER_PLAYER * PLAYERS_NUMBER;
+export const SET_SIZE = 3;

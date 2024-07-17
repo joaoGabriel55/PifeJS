@@ -1,4 +1,4 @@
-function isValidSet(cards) {
+function isWinner(cards) {
   const newCards = cards.map((card) => {
     if (isNaN(card.value)) {
       return card;
@@ -47,3 +47,5 @@ function isValidSet(cards) {
 
   return findSets(newCards, 0);
 }
+
+export default isWinner;

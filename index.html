@@ -3,10 +3,10 @@
   <head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="stylesheet" href="index.css" />
-    <script src="constants.js" defer></script>
-    <script src="game.js" defer></script>
-    <script src="calculate-winner.js" defer></script>
-    <script src="index.js" defer></script>
+    <script type="module" src="state/reducer.js" defer></script>
+    <script type="module" src="constants.js" defer></script>
+    <script type="module" src="game.js" defer></script>
+    <script type="module" src="index.js" defer></script>
     <title>PifeJS</title>
   </head>
   <body class="board">
@@ -18,7 +18,7 @@
       </div>
       <div class="discarded-cards" id="discard-pile">
         <h2>Last card</h2>
-        <div class="content" id="discarded-pile"></div>
+        <div class="content" id="discard-pile-content"></div>
       </div>
     </div>
     <div class="player" id="player"></div>

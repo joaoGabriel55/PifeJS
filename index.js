@@ -1,37 +1,62 @@
+import {
+  createCard,
+  flipCard,
+  renderDeck,
+  renderPlayersCards,
+} from "./game.js";
+import PubSub from "./pubsub.js";
+import { makeActions } from "./state/actions.js";
+import reducer, { DRAW_TYPES, initialState } from "./state/reducer.js";
+import { makeSelectors } from "./state/selectors.js";
+
 document.addEventListener("DOMContentLoaded", initGame);
 
 function initGame() {
+  const eventNotifier = new PubSub();
+
+  let state = { ...initialState };
+
+  const {
+    shuffleDeckAction,
+    distributeCardsAction,
+    drawCardAction,
+    showDeckTopCardAction,
+    discardFromDeckAction,
+    checkWinConditionAction
+  } = makeActions(eventNotifier);
+
+  let selectors = makeSelectors(state);
+
+  eventNotifier.subscribe((payload) => {
+    console.log(payload);
+    state = reducer({ state, action: { ...payload } });
+    selectors = makeSelectors(state);
+  });
+
+  shuffleDeckAction();
+  distributeCardsAction();
+
   const opponentDiv = document.getElementById("opponent");
   const playerDiv = document.getElementById("player");
   const deckDiv = document.getElementById("deck-pile");
   const discardPileDiv = document.getElementById("discard-pile");
-  const discardedPileContentDiv = document.getElementById("discarded-pile");
-  const discardedCards = [];
+  const discardPileContentDiv = document.getElementById("discard-pile-content");
 
-  const shuffledDeck = shuffleDeck(DECK);
-  const { deck, playerCards, opponentCards } = distributeCards(shuffledDeck);
-
-  populatePlayerCards(opponentDiv, opponentCards, false);
-  const playerCardElements = populatePlayerCards(playerDiv, playerCards, true);
+  renderPlayersCards(opponentDiv, state.opponentHand, false);
+  const playerCardElements = renderPlayersCards(
+    playerDiv,
+    state.playerHand,
+    true
+  );
 
   addDragAndDropEvents(playerCardElements);
 
-  renderRestOfCards(deck);
+  renderDeck(state.deck, eventNotifier);
 
   addDeckDragAndDropEvent();
 
   discardPileDiv.addEventListener("drop", handleDrop);
   discardPileDiv.addEventListener("dragover", handleDragOver);
-
-  eventBus.addEventListener("update-player-cards-event", () => {
-    addDeckDragAndDropEvent();
-  });
-
-  eventBus.addEventListener("player-move-event", () => {
-    if (isValidSet(playerCards)) {
-      alert("you won");
-    }
-  });
 
   let dragSrcEl = null;
 
@@ -65,13 +90,16 @@ function initGame() {
   function handleDrop(e) {
     if (e.stopPropagation) e.stopPropagation();
     if (!dragSrcEl) return;
-    if (!deck[deck.length - 1].isFaceUp && dragSrcEl.parentNode === deckDiv) return;
+    if (
+      !selectors.topDeckCard.isFaceUp &&
+      dragSrcEl.parentNode === deckDiv
+    )
+      return;
 
     if (dragSrcEl.parentNode === deckDiv) {
       handleDeckCardDrop(dragSrcEl, this);
-    } else if (dragSrcEl.parentNode === discardedPileContentDiv) { // last card
-      console.log('comprar do descarte');
-      handleDiscardedCardDrop(dragSrcEl, this);
+    } else if (dragSrcEl.parentNode === discardPileContentDiv) {
+      handleDiscardedCardDrop(this);
     } else if (dragSrcEl != this) {
       const content = e.dataTransfer.getData("text/html");
       handlePlayerCardSwap(dragSrcEl, this, content);
@@ -96,17 +124,15 @@ function initGame() {
 
   function handleDeckCardDrop(sourceElement, targetElement) {
     if (targetElement.dataset.player === "player") {
-      const drawnCard = deck.pop();
-
       const targetIndex = Number(targetElement.dataset.index);
-      const { cardContent, discardedCard } = drawCard({
-        targetIndex,
-        cards: playerCards,
-        drawnCard,
-      });
 
-      updatePlayerAndDiscardPiles(targetIndex, cardContent, discardedCard);
-      eventBus.dispatchEvent(new CustomEvent("player-move-event"));
+      drawCardAction({ targetIndex });
+
+      updatePlayerAndDiscardPiles(targetIndex);
+
+      addDeckDragAndDropEvent();
+
+      checkWinConditionAction();
     } else {
       discardCard();
     }
@@ -114,24 +140,21 @@ function initGame() {
     sourceElement.remove();
   }
 
-  function updatePlayerAndDiscardPiles(
-    targetIndex,
-    cardContent,
-    discardedCard
-  ) {
+  function updatePlayerAndDiscardPiles(targetIndex) {
     const playerDiv = document.getElementById("player");
     const deckCards = document.querySelectorAll(".deck .content .card");
     const topCard = deckCards.item(deckCards.length - 1);
     const discardedPileContent = document.querySelector(
       ".discarded-cards .content"
     );
+    const discardedCard = selectors.topDiscardPileCard;
 
-    const lastDiscardedCard = createCard({ ...discardedCard, isFaceUp: true })
+    const lastDiscardedCard = createCard({ ...discardedCard, isFaceUp: true });
 
-    playerDiv.children[targetIndex].innerHTML = cardContent;
-    discardedPileContent.appendChild(
-      lastDiscardedCard
-    );
+    playerDiv.children[targetIndex].innerHTML = createCard(
+      state.playerHand[targetIndex]
+    ).innerHTML;
+    discardedPileContent.appendChild(lastDiscardedCard);
 
     lastDiscardedCard.addEventListener("dragstart", handleDeckDragStart);
     lastDiscardedCard.addEventListener("dragover", handleDragOver);
@@ -144,18 +167,9 @@ function initGame() {
     });
 
     topCard.remove();
-
-    setDiscardedCards(discardedCard);
-
-    eventBus.dispatchEvent(new CustomEvent("update-player-cards-event"));
   }
 
   function handlePlayerCardSwap(sourceElement, targetElement, content) {
-    const sourceIndex = sourceElement.dataset.index;
-    const targetIndex = targetElement.dataset.index;
-
-    swapPlayerCards({ cards: playerCards, sourceIndex, targetIndex });
-
     sourceElement.innerHTML = targetElement.innerHTML;
     targetElement.innerHTML = content;
   }
@@ -163,14 +177,14 @@ function initGame() {
   function addDeckDragAndDropEvent() {
     const deckCards = document.querySelectorAll(".deck .content .card");
     const topCard = deckCards.item(deckCards.length - 1);
-    const topCardData = deck[deck.length - 1];
+    const topCardData = selectors.topDeckCard;
 
     topCard.addEventListener("dragstart", handleDeckDragStart);
     topCard.addEventListener("dragover", handleDragOver);
     topCard.addEventListener("dragend", handleDragEnd);
 
     topCard.addEventListener("click", () => {
-      deck[deck.length - 1].isFaceUp = true;
+      showDeckTopCardAction();
       flipCard(topCard, topCardData.suit, topCardData.value);
     });
   }
@@ -181,8 +195,8 @@ function initGame() {
     );
     const deckCards = document.querySelectorAll(".deck .content .card");
     const topCard = deckCards.item(deckCards.length - 1);
-    const topCardData = deck.pop();
-    setDiscardedCards(topCardData);
+    const topCardData = selectors.topDeckCard;
+    discardFromDeckAction();
 
     const lastDiscardedCard = createCard({ ...topCardData, isFaceUp: true });
 
@@ -191,38 +205,34 @@ function initGame() {
     lastDiscardedCard.addEventListener("dragover", handleDragOver);
     lastDiscardedCard.addEventListener("dragend", handleDragEnd);
 
-    discardedPileContent.appendChild(
-      lastDiscardedCard
-    );
+    discardedPileContent.appendChild(lastDiscardedCard);
+
     topCard.remove();
-
-
-    eventBus.dispatchEvent(new CustomEvent("update-player-cards-event"));
 
     const cards = document.querySelectorAll(".discarded-cards .content .card");
 
     cards.forEach((card, index) => {
       card.style.transform = `translate(${index * -5}px, 0)`;
     });
+
+    addDeckDragAndDropEvent();
   }
 
-  function setDiscardedCards(card) {
-    discardedCards.push(card);
-    console.log(discardedCards);
-  }
-
-  function handleDiscardedCardDrop(srcElement, targetElement) {
+  function handleDiscardedCardDrop(targetElement) {
     if (targetElement.dataset.player === "player") {
-      const drawnCard = discardedCards.pop();
-
       const targetIndex = Number(targetElement.dataset.index);
-      const { cardContent, discardedCard } = drawCard({
-        targetIndex,
-        cards: playerCards,
-        drawnCard,
-      });
+      const discardedCards = document.querySelectorAll(
+        ".discarded-cards .content .card"
+      );
+      const topCard = discardedCards.item(discardedCards.length - 1);
+      topCard.remove();
 
-      updatePlayerAndDiscardPiles(targetIndex, cardContent, discardedCard);
+      drawCardAction({ targetIndex, isFrom: DRAW_TYPES.DISCARD_PILE });
+
+      updatePlayerAndDiscardPiles(targetIndex);
+      addDeckDragAndDropEvent();
+
+      checkWinConditionAction();
     }
   }
 }
