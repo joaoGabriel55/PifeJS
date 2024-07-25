@@ -2,7 +2,7 @@ import { NUMBER_OF_CARDS_PER_PLAYER } from "./constants.js";
 
 function createIcon(suit) {
   const icon = document.createElement("img");
-  icon.src = `assets/${suit}.svg`;
+  icon.src = `${suit}.svg`;
   icon.width = 32;
   icon.height = 32;
 

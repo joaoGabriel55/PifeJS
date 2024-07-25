@@ -5,9 +5,9 @@ import {
   renderPlayersCards,
 } from "./game.js";
 import PubSub from "./pubsub.js";
-import { makeActions } from "./state/actions.js";
-import reducer, { DRAW_TYPES, initialState } from "./state/reducer.js";
-import { makeSelectors } from "./state/selectors.js";
+import { makeActions } from "../state/actions.js";
+import reducer, { DRAW_TYPES, initialState } from "../state/reducer.js";
+import { makeSelectors } from "../state/selectors.js";
 
 document.addEventListener("DOMContentLoaded", initGame);
 
