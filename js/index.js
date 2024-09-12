@@ -1,238 +1,199 @@
+import { makeActions } from "./state/actions.js";
+import { ACTIONS, DRAW_TYPES, initialState } from "./state/reducer.js";
+import { makeSelectors } from "./state/selectors.js";
 import {
+  handleDragStart,
+  handleDragOver,
+  handleDrop,
+  handleDragEnd,
+  handleDeckDragStart,
+} from "./drag-and-drop.js";
+import {
+  cleanUpPiles,
   createCard,
   flipCard,
   renderDeck,
+  renderDiscardPile,
+  renderOpponentCards,
   renderPlayersCards,
 } from "./game.js";
-import PubSub from "./pubsub.js";
-import { makeActions } from "../state/actions.js";
-import reducer, { DRAW_TYPES, initialState } from "../state/reducer.js";
-import { makeSelectors } from "../state/selectors.js";
 
-document.addEventListener("DOMContentLoaded", initGame);
+let state = { ...initialState };
 
-function initGame() {
-  const eventNotifier = new PubSub();
+const socket = io();
+const {
+  showDeckTopCardAction,
+  resetGameAction,
+  checkWinConditionAction,
+  drawCardAction,
+  discardFromDeckAction,
+} = makeActions(socket);
 
-  let state = { ...initialState };
+let selectors = makeSelectors(state);
+let currentPlayerId;
 
-  const {
-    shuffleDeckAction,
-    distributeCardsAction,
-    drawCardAction,
-    showDeckTopCardAction,
-    discardFromDeckAction,
-    checkWinConditionAction
-  } = makeActions(eventNotifier);
+socket.on("state_changed", ({ state: newState, action }) => {
+  state = newState;
+  selectors = makeSelectors(state);
 
-  let selectors = makeSelectors(state);
+  if (action?.type === "DRAW_CARD") {
+    updatePlayerCards(action.payload.targetIndex);
+  }
 
-  eventNotifier.subscribe((payload) => {
-    console.log(payload);
-    state = reducer({ state, action: { ...payload } });
-    selectors = makeSelectors(state);
+  const renderingActions = [ACTIONS.DISCARD_FROM_DECK, ACTIONS.DRAW_CARD];
+  if (renderingActions.includes(action?.type)) {
+    updatePiles(state);
+  }
+  if (action?.type === ACTIONS.SHOW_DECK_TOP_CARD) {
+    const playerDiv = document.getElementById("player");
+    addDragAndDropEvents(Array.from(playerDiv.children));
+  }
+});
+
+function updatePiles(state) {
+  cleanUpPiles();
+  renderDeck(state.deck);
+  addDeckDragAndDropEvent();
+  renderDiscardPile({
+    cards: state.discardPile,
+    handleDeckDragStart,
+    handleDragEnd,
+    handleDragOver,
+  });
+}
+
+function addDeckDragAndDropEvent() {
+  const deckCards = document.querySelectorAll(".deck .content .card");
+  const topCard = deckCards.item(deckCards.length - 1);
+  const topCardData = selectors.topDeckCard;
+
+  topCard.addEventListener("dragstart", handleDeckDragStart);
+  topCard.addEventListener("dragover", handleDragOver);
+  topCard.addEventListener("dragend", handleDragEnd);
+
+  topCard.addEventListener("click", () => {
+    showDeckTopCardAction();
+    flipCard(topCard, topCardData.suit, topCardData.value);
+  });
+}
+
+function updatePlayerCards(targetIndex) {
+  const playerDiv = document.getElementById("player");
+
+  playerDiv.children[targetIndex].innerHTML = createCard(
+    state.playersCards[currentPlayerId][targetIndex]
+  ).innerHTML;
+}
+
+function addDragAndDropEvents(cardElements) {
+  cardElements.forEach((card) => {
+    card.addEventListener("dragstart", handleDragStart);
+    card.addEventListener("dragover", handleDragOver);
+    card.addEventListener(
+      "drop",
+      handleDrop(currentPlayerId, selectors.topDeckCard.isFaceUp)
+    );
+    card.addEventListener("dragend", handleDragEnd);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  socket.on("player_in", (playerId) => {
+    if (!currentPlayerId) currentPlayerId = playerId;
+
+    let playerIdElement = document.getElementById("player-id");
+    if (!playerIdElement) {
+      playerIdElement = document.createElement("div");
+      playerIdElement.id = "player-id";
+      playerIdElement.textContent = `Your Player ID: ${playerId}`;
+      document.body.appendChild(playerIdElement);
+    }
   });
 
-  shuffleDeckAction();
-  distributeCardsAction();
+  socket.on("start_game", () => {
+    const board = document.getElementById("board-content");
+    board.classList.toggle("hidden");
 
+    initGame();
+  });
+
+  socket.on("player_out", (playerId) => {
+    const board = document.getElementById("board-content");
+    board.classList.toggle("hidden");
+
+    const opponentLeftElement = document.createElement("div");
+    opponentLeftElement.textContent = `Player ${playerId} left the game`;
+    document.body.appendChild(opponentLeftElement);
+
+    resetGameAction();
+    destroyGame();
+  });
+});
+
+export function handleDiscardedCardDrop(targetElement, playerId) {
+  if (targetElement.dataset.player === "player") {
+    const targetIndex = Number(targetElement.dataset.index);
+    const discardedCards = document.querySelectorAll(
+      ".discarded-cards .content .card"
+    );
+    const topCard = discardedCards.item(discardedCards.length - 1);
+    topCard.remove();
+
+    drawCardAction({ targetIndex, isFrom: DRAW_TYPES.DISCARD_PILE, playerId });
+
+    updatePlayerCards(targetIndex);
+    addDeckDragAndDropEvent();
+
+    checkWinConditionAction({ playerId });
+  }
+}
+
+export function handleDeckCardDrop(sourceElement, targetElement, playerId) {
+  if (targetElement.dataset.player === "player") {
+    const targetIndex = Number(targetElement.dataset.index);
+
+    drawCardAction({ targetIndex, playerId });
+
+    addDeckDragAndDropEvent();
+
+    checkWinConditionAction({ playerId });
+  } else {
+    discardFromDeckAction();
+  }
+
+  sourceElement.remove();
+}
+
+function initGame() {
   const opponentDiv = document.getElementById("opponent");
   const playerDiv = document.getElementById("player");
-  const deckDiv = document.getElementById("deck-pile");
   const discardPileDiv = document.getElementById("discard-pile");
-  const discardPileContentDiv = document.getElementById("discard-pile-content");
 
-  renderPlayersCards(opponentDiv, state.opponentHand, false);
+  renderOpponentCards(opponentDiv);
+
   const playerCardElements = renderPlayersCards(
     playerDiv,
-    state.playerHand,
-    true
+    state.playersCards[currentPlayerId]
   );
 
   addDragAndDropEvents(playerCardElements);
 
-  renderDeck(state.deck, eventNotifier);
+  renderDeck(state.deck);
 
   addDeckDragAndDropEvent();
 
-  discardPileDiv.addEventListener("drop", handleDrop);
+  discardPileDiv.addEventListener("drop", handleDrop(currentPlayerId, true));
   discardPileDiv.addEventListener("dragover", handleDragOver);
+}
 
-  let dragSrcEl = null;
+function destroyGame() {
+  const opponentDiv = document.getElementById("opponent");
+  const playerDiv = document.getElementById("player");
+  const deckDiv = document.getElementById("deck-pile");
+  const discardPileContentDiv = document.getElementById("discard-pile-content");
 
-  function addDragAndDropEvents(cardElements) {
-    cardElements.forEach((card) => {
-      card.addEventListener("dragstart", handleDragStart);
-      card.addEventListener("dragover", handleDragOver);
-      card.addEventListener("drop", handleDrop);
-      card.addEventListener("dragend", handleDragEnd);
-    });
-  }
-
-  function handleDragStart(e) {
-    this.style.opacity = "0.4";
-
-    dragSrcEl = this;
-
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", this.innerHTML);
-    e.dataTransfer.setData("text/plain", this.dataset.index);
-  }
-
-  function handleDragOver(e) {
-    if (e.preventDefault) e.preventDefault();
-
-    e.dataTransfer.dropEffect = "move";
-
-    return false;
-  }
-
-  function handleDrop(e) {
-    if (e.stopPropagation) e.stopPropagation();
-    if (!dragSrcEl) return;
-    if (
-      !selectors.topDeckCard.isFaceUp &&
-      dragSrcEl.parentNode === deckDiv
-    )
-      return;
-
-    if (dragSrcEl.parentNode === deckDiv) {
-      handleDeckCardDrop(dragSrcEl, this);
-    } else if (dragSrcEl.parentNode === discardPileContentDiv) {
-      handleDiscardedCardDrop(this);
-    } else if (dragSrcEl != this) {
-      const content = e.dataTransfer.getData("text/html");
-      handlePlayerCardSwap(dragSrcEl, this, content);
-    }
-
-    return false;
-  }
-
-  function handleDragEnd(e) {
-    this.style.opacity = "1";
-    dragSrcEl = null;
-  }
-
-  function handleDeckDragStart(e) {
-    this.style.opacity = "0.4";
-
-    dragSrcEl = this;
-
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", this.innerHTML);
-  }
-
-  function handleDeckCardDrop(sourceElement, targetElement) {
-    if (targetElement.dataset.player === "player") {
-      const targetIndex = Number(targetElement.dataset.index);
-
-      drawCardAction({ targetIndex });
-
-      updatePlayerAndDiscardPiles(targetIndex);
-
-      addDeckDragAndDropEvent();
-
-      checkWinConditionAction();
-    } else {
-      discardCard();
-    }
-
-    sourceElement.remove();
-  }
-
-  function updatePlayerAndDiscardPiles(targetIndex) {
-    const playerDiv = document.getElementById("player");
-    const deckCards = document.querySelectorAll(".deck .content .card");
-    const topCard = deckCards.item(deckCards.length - 1);
-    const discardedPileContent = document.querySelector(
-      ".discarded-cards .content"
-    );
-    const discardedCard = selectors.topDiscardPileCard;
-
-    const lastDiscardedCard = createCard({ ...discardedCard, isFaceUp: true });
-
-    playerDiv.children[targetIndex].innerHTML = createCard(
-      state.playerHand[targetIndex]
-    ).innerHTML;
-    discardedPileContent.appendChild(lastDiscardedCard);
-
-    lastDiscardedCard.addEventListener("dragstart", handleDeckDragStart);
-    lastDiscardedCard.addEventListener("dragover", handleDragOver);
-    lastDiscardedCard.addEventListener("dragend", handleDragEnd);
-
-    const cards = document.querySelectorAll(".discarded-cards .content .card");
-
-    cards.forEach((card, index) => {
-      card.style.transform = `translate(${index * -5}px, 0)`;
-    });
-
-    topCard.remove();
-  }
-
-  function handlePlayerCardSwap(sourceElement, targetElement, content) {
-    sourceElement.innerHTML = targetElement.innerHTML;
-    targetElement.innerHTML = content;
-  }
-
-  function addDeckDragAndDropEvent() {
-    const deckCards = document.querySelectorAll(".deck .content .card");
-    const topCard = deckCards.item(deckCards.length - 1);
-    const topCardData = selectors.topDeckCard;
-
-    topCard.addEventListener("dragstart", handleDeckDragStart);
-    topCard.addEventListener("dragover", handleDragOver);
-    topCard.addEventListener("dragend", handleDragEnd);
-
-    topCard.addEventListener("click", () => {
-      showDeckTopCardAction();
-      flipCard(topCard, topCardData.suit, topCardData.value);
-    });
-  }
-
-  function discardCard() {
-    const discardedPileContent = document.querySelector(
-      ".discarded-cards .content"
-    );
-    const deckCards = document.querySelectorAll(".deck .content .card");
-    const topCard = deckCards.item(deckCards.length - 1);
-    const topCardData = selectors.topDeckCard;
-    discardFromDeckAction();
-
-    const lastDiscardedCard = createCard({ ...topCardData, isFaceUp: true });
-
-    // TODO refactor (repeated in addDeckDragAndDropEvent)
-    lastDiscardedCard.addEventListener("dragstart", handleDeckDragStart);
-    lastDiscardedCard.addEventListener("dragover", handleDragOver);
-    lastDiscardedCard.addEventListener("dragend", handleDragEnd);
-
-    discardedPileContent.appendChild(lastDiscardedCard);
-
-    topCard.remove();
-
-    const cards = document.querySelectorAll(".discarded-cards .content .card");
-
-    cards.forEach((card, index) => {
-      card.style.transform = `translate(${index * -5}px, 0)`;
-    });
-
-    addDeckDragAndDropEvent();
-  }
-
-  function handleDiscardedCardDrop(targetElement) {
-    if (targetElement.dataset.player === "player") {
-      const targetIndex = Number(targetElement.dataset.index);
-      const discardedCards = document.querySelectorAll(
-        ".discarded-cards .content .card"
-      );
-      const topCard = discardedCards.item(discardedCards.length - 1);
-      topCard.remove();
-
-      drawCardAction({ targetIndex, isFrom: DRAW_TYPES.DISCARD_PILE });
-
-      updatePlayerAndDiscardPiles(targetIndex);
-      addDeckDragAndDropEvent();
-
-      checkWinConditionAction();
-    }
-  }
+  opponentDiv.innerHTML = "";
+  playerDiv.innerHTML = "";
+  deckDiv.innerHTML = "";
+  discardPileContentDiv.innerHTML = "";
 }

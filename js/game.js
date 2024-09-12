@@ -9,22 +9,20 @@ function createIcon(suit) {
   return icon;
 }
 
-export function createCard({ suit, value, isFaceUp }) {
+export function createCard({ suit, value, isDraggable = true }) {
   const card = document.createElement("div");
-  card.className = `card ${isFaceUp ? 'face-up' : 'face-down'}`;
+  card.className = "card face-up";
 
-  if (isFaceUp) {
-    const cardValue = document.createElement("h1");
-    cardValue.innerText = value;
+  const cardValue = document.createElement("h1");
+  cardValue.innerText = value;
 
-    if (["heart", "diamond"].includes(suit)) {
-      cardValue.style.color = "var(--red-color)";
-    }
-
-    card.append(createIcon(suit), cardValue, createIcon(suit));
+  if (["heart", "diamond"].includes(suit)) {
+    cardValue.style.color = "var(--red-color)";
   }
 
-  card.setAttribute("draggable", true);
+  card.append(createIcon(suit), cardValue, createIcon(suit));
+
+  if (isDraggable) card.setAttribute("draggable", true);
 
   return card;
 }
@@ -37,7 +35,9 @@ export function shuffleDeck(deck) {
     currentIndex--;
 
     [deck[currentIndex], deck[randomIndex]] = [
-      deck[randomIndex], deck[currentIndex]];
+      deck[randomIndex],
+      deck[currentIndex],
+    ];
   }
 
   return deck;
@@ -50,27 +50,45 @@ export function distributeCards(deck) {
   return {
     deck,
     playerHand,
-    opponentHand
+    opponentHand,
   };
 }
 
-export function renderPlayersCards(playerDiv, cards, isFaceUp) {
+export function renderPlayersCards(playerDiv, cards) {
   return cards.map((card, index) => {
-    card.isFaceUp = isFaceUp;
     const newCard = createCard(card);
     newCard.dataset.index = index;
-    newCard.dataset.player = 'player';
+    newCard.dataset.player = "player";
     playerDiv.appendChild(newCard);
     return newCard;
   });
 }
 
-export function renderDeck(cards, eventNotifier) {
+export function renderOpponentCards(opponentDiv) {
+  Array.from({ length: 9 }).forEach(() => {
+    const card = document.createElement("div");
+    card.className = "card face-down";
+
+    opponentDiv.appendChild(card);
+  });
+}
+
+export function cleanUpPiles() {
+  document.getElementById("deck-pile").innerHTML = null;
+  const discardPile = document.getElementById("discard-pile-content");
+  if (discardPile) {
+    // discardPile.innerHTML = null;
+    discardPile.replaceChildren([]);
+  }
+}
+
+export function renderDeck(cards) {
   const deckDiv = document.querySelector(".deck .content");
 
-  cards.forEach(card => {
+  cards.forEach((card) => {
     card.isFaceUp = false;
-    const newCard = createCard(card);
+    const newCard = document.createElement("div");
+    newCard.className = "card face-down";
     deckDiv.appendChild(newCard);
   });
 
@@ -83,11 +101,45 @@ export function renderDeck(cards, eventNotifier) {
   if (deckCards.length > 0) {
     const topCard = deckCards[deckCards.length - 1];
     const topCardData = cards[cards.length - 1];
+    topCard.draggable = true;
     topCard.addEventListener("click", () => {
-      eventNotifier.publish({ type: "SHOW_DECK_TOP_CARD" });
       flipCard(topCard, topCardData.suit, topCardData.value);
     });
   }
+}
+
+export function renderDiscardPile({
+  cards,
+  handleDeckDragStart,
+  handleDragOver,
+  handleDragEnd,
+}) {
+  const discardPileDiv = document.getElementById("discard-pile-content");
+
+  const createdCards = cards.map((card) => {
+    const newCard = createCard({
+      value: card.value,
+      suit: card.suit,
+      isDraggable: false,
+    });
+    discardPileDiv.appendChild(newCard);
+    return newCard;
+  });
+
+  const lastDiscardedCard = createdCards[createdCards.length - 1];
+
+  lastDiscardedCard.draggable = true;
+  lastDiscardedCard.addEventListener("dragstart", handleDeckDragStart);
+  lastDiscardedCard.addEventListener("dragover", handleDragOver);
+  lastDiscardedCard.addEventListener("dragend", handleDragEnd);
+
+  const discardedCards = document.querySelectorAll(
+    ".discarded-cards .content .card"
+  );
+
+  discardedCards.forEach((card, index) => {
+    card.style.transform = `translate(${index * -5}px, 0)`;
+  });
 }
 
 export function flipCard(card, suit, value) {
@@ -106,4 +158,9 @@ export function flipCard(card, suit, value) {
     card.innerHTML = "";
     card.append(createIcon(suit), cardValue, createIcon(suit));
   }
+}
+
+export function handlePlayerCardSwap(sourceElement, targetElement, content) {
+  sourceElement.innerHTML = targetElement.innerHTML;
+  targetElement.innerHTML = content;
 }

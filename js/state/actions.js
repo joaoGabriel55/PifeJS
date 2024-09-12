@@ -1,25 +1,28 @@
 import { ACTIONS } from "./reducer.js";
 
-export const makeActions = (eventNotifier) => {
+export const makeActions = (socket) => {
   return {
-    shuffleDeckAction: () =>
-      eventNotifier.publish({ type: ACTIONS.SHUFFLE_DECK }),
+    shuffleDeckAction: () => 
+      socket.emit("state_change", { type: ACTIONS.SHUFFLE_DECK }),
     distributeCardsAction: () =>
-      eventNotifier.publish({ type: ACTIONS.DISTRIBUTE_CARDS }),
-    drawCardAction: ({ targetIndex, isFrom }) => {
-      eventNotifier.publish({
+      socket.emit("state_change", { type: ACTIONS.DISTRIBUTE_CARDS }),
+    drawCardAction: ({ targetIndex, isFrom, playerId }) => {
+      socket.emit("state_change", {
         type: ACTIONS.DRAW_CARD,
         payload: {
           targetIndex,
           isFrom,
+          playerId,
         },
       });
     },
     showDeckTopCardAction: () =>
-      eventNotifier.publish({ type: ACTIONS.SHOW_DECK_TOP_CARD }),
+      socket.emit("state_change", { type: ACTIONS.SHOW_DECK_TOP_CARD }),
     discardFromDeckAction: () =>
-      eventNotifier.publish({ type: ACTIONS.DISCARD_FROM_DECK }),
-    checkWinConditionAction: () =>
-      eventNotifier.publish({ type: ACTIONS.CHECK_WIN_CONDITION }),
+      socket.emit("state_change", { type: ACTIONS.DISCARD_FROM_DECK }),
+    checkWinConditionAction: ({ playerId }) =>
+      socket.emit("state_change", { type: ACTIONS.CHECK_WIN_CONDITION, payload: { playerId } }),
+    resetGameAction: () =>
+      socket.emit("state_change", { type: ACTIONS.RESET_GAME }),
   };
 };
