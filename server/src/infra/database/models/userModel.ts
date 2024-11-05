@@ -1,4 +1,5 @@
 import { Model, ModelObject } from "objection";
+import { RoomModel } from "./roomModel.js";
 
 class UserModel extends Model {
   static tableName = "users";
@@ -6,6 +7,9 @@ class UserModel extends Model {
   id!: string;
   email!: string;
   name?: string;
+
+  ownedRooms?: RoomModel[];
+  rooms?: RoomModel[];
 
   static jsonSchema = {
     type: "object",
@@ -16,6 +20,31 @@ class UserModel extends Model {
       name: { type: "string" },
     },
   };
+
+  static get relationMappings() {
+    return {
+      rooms: {
+        relation: Model.ManyToManyRelation,
+        modelClass: RoomModel,
+        join: {
+          from: "users.id",
+          through: {
+            from: "room_players.playerId",
+            to: "room_players.roomId",
+          },
+          to: "rooms.id",
+        },
+        ownedRooms: {
+          relation: Model.HasManyRelation,
+          modelClass: RoomModel,
+          join: {
+            from: "users.id",
+            to: "rooms.ownerId",
+          },
+        },
+      }
+    };
+  }
 }
 
 export { UserModel };

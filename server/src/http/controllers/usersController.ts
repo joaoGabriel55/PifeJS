@@ -13,7 +13,7 @@ export const makeUsersController = (usersRepository: UsersRepository) => {
 
       res.json(users);
     } catch (e: any) {
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ message: e.message });
     }
   };
 
@@ -28,9 +28,9 @@ export const makeUsersController = (usersRepository: UsersRepository) => {
       res.json(user);
     } catch (e) {
       if (e instanceof NotFoundError) {
-        res.status(404).json({ error: e.message });
+        res.status(404).json({ message: e.message });
       } else if (e instanceof Error) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ message: e.message });
       }
     }
   };
@@ -65,7 +65,7 @@ export const makeUsersController = (usersRepository: UsersRepository) => {
       res.json(result);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ message: error.message });
       } else if (error instanceof Error) {
         res.status(500).json({
           message: error.message,
@@ -85,7 +85,7 @@ export const makeUsersController = (usersRepository: UsersRepository) => {
       res.status(204).send();
     } catch (error) {
       if (error instanceof NotFoundError) {
-        res.status(404).json({ error: error.message });
+        res.status(404).json({ message: error.message });
       } else if (error instanceof Error) {
         res.status(500).json({
           message: error.message,

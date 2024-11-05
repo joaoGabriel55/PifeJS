@@ -64,7 +64,7 @@ describe("Users Controller", () => {
         );
 
         expect(response.status).toBe(404);
-        expect(response.body).toStrictEqual({ error: "User not found" });
+        expect(response.body).toStrictEqual({ message: "User not found" });
       });
     });
   });
@@ -147,7 +147,7 @@ describe("Users Controller", () => {
           .set("Content-Type", "application/json");
 
         expect(response.status).toBe(404);
-        expect(response.body).toStrictEqual({ error: "User not found" });
+        expect(response.body).toStrictEqual({ message: "User not found" });
       });
     });
 
@@ -205,7 +205,7 @@ describe("Users Controller", () => {
         );
 
         expect(response.status).toBe(404);
-        expect(response.body).toStrictEqual({ error: "User not found" });
+        expect(response.body).toStrictEqual({ message: "User not found" });
       });
     });
   });

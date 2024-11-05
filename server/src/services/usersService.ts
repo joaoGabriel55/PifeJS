@@ -1,12 +1,12 @@
-import { CreateUserDto, UpdateUserDto, User } from "../domain/user.js";
+import { CreateUserDto, UpdateUserDto } from "../domain/user.js";
 import { NotFoundError } from "../errors/notFoundError.js";
-import { IRepository } from "../repositories/IRepository.js";
+import UsersRepository from "../repositories/usersRepository.js";
 import { generateId } from "../shared/entityId.js";
 
 export class UserService {
-  private readonly repository: IRepository<User>;
+  private readonly repository: UsersRepository;
 
-  constructor(repository: IRepository<User>) {
+  constructor(repository: UsersRepository) {
     this.repository = repository;
   }
 

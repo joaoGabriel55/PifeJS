@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const UserSchema = z.object({
+export const UserSchema = z.object({
   id: z
     .string({ message: "Id is missing" })
     .uuid({ message: "Invalid format" }),

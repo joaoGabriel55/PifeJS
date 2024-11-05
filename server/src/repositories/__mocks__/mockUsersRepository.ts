@@ -1,5 +1,5 @@
 import { User } from "../../domain/user.js";
-import { IRepository } from "../IRepository.js";
+import { BaseRepository } from "../baseRepository.js";
 
 export const MOCK_USERS = [
   {
@@ -18,34 +18,41 @@ export const MOCK_USERS = [
   },
 ];
 
-export class MockUsersRepository implements IRepository<User> {
-  private users;
+export class MockUsersRepository extends BaseRepository<User> {
+  private users: Array<User>;
 
   constructor(users: Array<User> = MOCK_USERS) {
+    super();
     this.users = users;
   }
 
-  async index() {
+  async index(): Promise<Array<User>> {
     return this.users;
   }
 
-  async find(id: string) {
+  async find(id: string): Promise<User | null> {
     const user = this.users.find((u) => u.id === id);
-
-    if (user) return user;
-
-    return null;
+    return user || null;
   }
 
-  async create(userData: User) {
+  async findByIds(ids: Array<string>): Promise<Array<User>> {
+    return this.users.filter((user) => ids.includes(user.id));
+  }
+
+  async create(userData: User): Promise<User | null> {
+    this.users.push(userData);
     return userData;
   }
 
-  async update(id: string, userData: User) {
-    return userData;
+  async update(id: string, userData: Partial<User>): Promise<User | null> {
+    const userIndex = this.users.findIndex((u) => u.id === id);
+    if (userIndex === -1) return null;
+
+    this.users[userIndex] = { ...this.users[userIndex], ...userData };
+    return this.users[userIndex];
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<void> {
     this.users = this.users.filter((u) => u.id !== id);
   }
 }
