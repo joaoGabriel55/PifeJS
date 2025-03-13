@@ -1,0 +1,43 @@
+:root {
+  --board-background-color: radial-gradient(circle at center, #73A57E, #4B6952);
+  --card-background-color: #FFF;
+  --face-down-card-background-color: radial-gradient(circle at center, #A80000, #6E1919);
+  --card-width: 120px;
+  --card-height: 180px;
+  --card-border-radius: 10px;
+  --card-number-font-size: 68px;
+  --red-color: #D60000;
+  --card-padding: 8px;
+}
+
+.board {
+  width: 100vw;
+  height: 100vh;
+  background: var(--board-background-color);
+
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  padding: 12px;
+  align-items: center;
+}
+
+.player-hand,
+.opponent-hand,
+.deck {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.table {
+  display: flex;
+  justify-content: center;
+  gap: 256px;
+  height: 100%;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.deck {
+  position: relative;
+}

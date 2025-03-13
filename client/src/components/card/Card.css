@@ -1,0 +1,41 @@
+.card {
+  width: 120px;
+  height: 190px;
+  padding: 8px;
+  border-radius: 8px;
+
+  &.face-up {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #fff;
+    color: black;
+
+    .value {
+      align-self: center;
+      font-size: 68px;
+
+      &.red {
+        color: #D60000;
+      }
+    }
+
+    .suit {
+      font-size: 32px;
+
+      &.red {
+        color: #D60000;
+      }
+
+      &:last-child {
+        align-self: end;
+        transform: rotate(-180deg);
+      }
+    }
+  }
+
+  &.face-down {
+    background: radial-gradient(circle at center, #A80000, #6E1919);
+    border: 2px solid #fff;
+  }
+}
