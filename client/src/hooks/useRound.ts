@@ -48,7 +48,7 @@ export const useRound = () => {
           name: "Player 1",
           email: "player1@example.com",
         },
-        hand: createMockDeck().slice(0, 9),
+        hand: createMockDeck().slice(0, 9).map(card => ({...card, isFaceDown: false})),
       },
       {
         player: {

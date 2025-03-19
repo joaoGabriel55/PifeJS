@@ -39,3 +39,16 @@
     border: 2px solid #fff;
   }
 }
+
+.draggable-card {
+  cursor: grab;
+}
+
+.droppable-slot {
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.droppable-slot:hover {
+  border-color: #007bff;
+}
