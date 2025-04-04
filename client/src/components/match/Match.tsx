@@ -7,6 +7,7 @@ import { PlayerHand } from "../card/PlayerHand";
 import { DiscardPile } from "../card/DicardPile";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { TCard } from "../card/CardDisplay";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 export function Match() {
   const { round } = useRound();
@@ -109,7 +110,7 @@ export function Match() {
           <Card key={card.id} card={card} />
         ))}
       </section>
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]}>
         <section className="mid-section">
           <Deck cards={deck} />
           <DiscardPile cards={discardPile} />
