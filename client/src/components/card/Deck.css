@@ -1,0 +1,12 @@
+.deck-wrapper {
+  display: flex;
+  position: relative;
+}
+
+.deck-card-wrapper {
+  position: absolute;
+}
+
+.top-card {
+  cursor: pointer;
+}

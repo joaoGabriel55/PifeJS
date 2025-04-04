@@ -29,6 +29,12 @@
   gap: 8px;
 }
 
+.deck {
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
 .table {
   display: flex;
   justify-content: center;
@@ -38,6 +44,9 @@
   font-weight: 400;
 }
 
-.deck {
-  position: relative;
+.mid-section {
+  display: flex;
+  justify-content: center;
+  gap: 256px;
+  height: 210px;
 }

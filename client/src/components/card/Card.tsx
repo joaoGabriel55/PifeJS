@@ -1,33 +1,21 @@
-import { useDraggable } from "@dnd-kit/core";
 import { TCard, CardDisplay } from "./CardDisplay";
-import { DroppableSlot } from "./DroppableSlot";
-import "./Card.css";
+import { DraggableCard } from "./DraggableCard";
+import React from "react";
 
 type CardProps = {
   card: TCard;
+  isDraggable?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 };
 
-export function Card({ card }: CardProps) {
-  const { listeners, setNodeRef, transform } = useDraggable({
-    id: card.id,
-  });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
+export function Card({ card, isDraggable = false, onClick }: CardProps) {
+  if (!isDraggable) {
+    return <CardDisplay {...card} onClick={onClick} />;
+  }
 
   return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      style={style}
-      className="draggable-card"
-    >
-      <DroppableSlot id={card.id}>
-        <CardDisplay {...card} />
-      </DroppableSlot>
-    </div>
+    <DraggableCard id={card.id} source={card.source}>
+      <CardDisplay {...card} onClick={onClick} />
+    </DraggableCard>
   );
 }
