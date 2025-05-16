@@ -2,20 +2,23 @@ import { ReactNode, useReducer } from "react";
 import { TRound } from "../../hooks/useRound";
 import { GameContext, GameDispatchContext } from "./GameContext";
 import { gameReducer } from "./GameReducer";
-import { GameState } from "./types";
+import { GameState, MatchMeta } from "./types";
 
 export function GameProvider({
-  round,
+  value,
   children,
 }: {
-  round: TRound;
+  value: { round: TRound; userData: MatchMeta };
   children: ReactNode;
 }) {
+  const { round, userData } = value;
+
   const initialState: GameState = {
     playerHand: round.hands[0].hand,
     deck: round.deck,
     discardPile: round.discardPile,
     opponentHand: round.hands[1].hand,
+    userData,
   };
 
   const [state, dispatch] = useReducer(gameReducer, initialState);

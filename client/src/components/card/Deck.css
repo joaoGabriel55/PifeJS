@@ -9,4 +9,9 @@
 
 .top-card {
   cursor: pointer;
+
+  &.blocked {
+    cursor: not-allowed;
+  }
 }
+

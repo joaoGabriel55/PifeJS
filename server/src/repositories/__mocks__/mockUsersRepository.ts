@@ -1,4 +1,5 @@
 import { User } from "../../domain/user.js";
+import { NotFoundError } from "../../errors/notFoundError.js";
 import { BaseRepository } from "../baseRepository.js";
 
 export const MOCK_USERS = [
@@ -39,14 +40,14 @@ export class MockUsersRepository extends BaseRepository<User> {
     return this.users.filter((user) => ids.includes(user.id));
   }
 
-  async create(userData: User): Promise<User | null> {
+  async create(userData: User): Promise<User> {
     this.users.push(userData);
     return userData;
   }
 
-  async update(id: string, userData: Partial<User>): Promise<User | null> {
+  async update(id: string, userData: Partial<User>): Promise<User> {
     const userIndex = this.users.findIndex((u) => u.id === id);
-    if (userIndex === -1) return null;
+    if (userIndex === -1) throw new NotFoundError("User not found");
 
     this.users[userIndex] = { ...this.users[userIndex], ...userData };
     return this.users[userIndex];

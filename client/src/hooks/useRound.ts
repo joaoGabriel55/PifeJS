@@ -14,7 +14,7 @@ export type THand = {
 export type TRound = {
   id: string;
   discardPile: TCard[];
-  deck: TCard[];
+  deckSize: number;
   currentPlayer: TPlayer;
   hands: THand[];
   match: {
@@ -81,7 +81,7 @@ export const useRound = () => {
   const round: TRound = {
     id: "mock-round-id",
     discardPile: [],
-    deck: deck.map((card) => ({ ...card, source: "DECK" })),
+    deckSize: deck.length,
     currentPlayer: {
       id: "player-1",
       name: "Player 1",

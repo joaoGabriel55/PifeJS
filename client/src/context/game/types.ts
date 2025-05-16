@@ -2,9 +2,15 @@ import { TCard } from "../../components/card/CardDisplay";
 
 export type GameState = {
   playerHand: TCard[];
-  deck: TCard[];
+  deckSize: number;
   discardPile: TCard[];
   opponentHand: TCard[];
+  userData: MatchMeta;
+};
+
+export type MatchMeta = {
+  userName: string;
+  currentPlayer: string;
 };
 
 export type GameAction =

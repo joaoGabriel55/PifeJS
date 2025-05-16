@@ -1,5 +1,5 @@
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
-import { useGameDispatch, useGameState } from "../../context/game/GameContext";
+import { useGameState } from "../../context/game/GameContext";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { Deck } from "../card/Deck";
 import { DiscardPile } from "../card/DicardPile";
@@ -9,11 +9,16 @@ import { useBoard } from "../../hooks/useBoard";
 
 export function Board() {
   const state = useGameState();
-  const dispatch = useGameDispatch();
 
   const { swapPlayerCards } = useBoard();
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (state.userData.userName !== state.userData.currentPlayer) {
+      alert("espera");
+
+      return;
+    }
+
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -27,28 +32,12 @@ export function Board() {
         toId: over.id.toString(),
       });
     } else if (activeSource === "DECK" && overSource === "PLAYER") {
-      dispatch({
-        type: "DRAW_FROM_DECK",
-        payload: {
-          deckCardId: active.id.toString(),
-          playerCardId: over.id.toString(),
-        },
-      });
+      // emit
+      // atualiza o estado
     } else if (activeSource === "DISCARD" && overSource === "PLAYER") {
-      dispatch({
-        type: "DRAW_FROM_DISCARD",
-        payload: {
-          discardCardId: active.id.toString(),
-          playerCardId: over.id.toString(),
-        },
-      });
+      //
     } else if (activeSource === "DECK" && overSource === "DISCARD") {
-      dispatch({
-        type: "DISCARD_FROM_DECK",
-        payload: {
-          deckCardId: active.id.toString(),
-        },
-      });
+      //
     }
   };
 
@@ -61,12 +50,13 @@ export function Board() {
       </section>
       <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]}>
         <section className="mid-section">
-          <Deck cards={state.deck} />
+          <Deck deckSize={state.deckSize} />
           <DiscardPile cards={state.discardPile} />
         </section>
         <section className="player-hand">
           <PlayerHand cards={state.playerHand} />
         </section>
+        <p>{state.userData.userName}</p>
       </DndContext>
     </div>
   );

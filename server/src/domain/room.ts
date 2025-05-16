@@ -1,12 +1,11 @@
 import { z } from "zod";
 import { UserSchema } from "./user.js";
+import { UuidSchema } from "./uuid.js";
 
 export const MAX_PLAYERS = 4;
 
-const RoomSchema = z.object({
-  id: z
-    .string({ message: "Id is missing" })
-    .uuid({ message: "Invalid format" }),
+export const RoomSchema = z.object({
+  id: UuidSchema,
   name: z.string({ message: "Name must be a string" }).optional(),
   owner: UserSchema,
   players: z.array(UserSchema).max(MAX_PLAYERS, { message: "Room is full" }),

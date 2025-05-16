@@ -1,9 +1,8 @@
 import { z } from "zod";
+import { UuidSchema } from "./uuid.js";
 
 export const UserSchema = z.object({
-  id: z
-    .string({ message: "Id is missing" })
-    .uuid({ message: "Invalid format" }),
+  id: UuidSchema,
   name: z.string({message: "Name must be a string"}).optional(),
   email: z
     .string({ message: "Email is missing" })
