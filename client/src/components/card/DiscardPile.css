@@ -1,0 +1,11 @@
+.discard-pile {
+  height: 100%;
+}
+
+.discard-placeholder {
+  height: 100%;
+  min-width: 120px;
+  background-color: #007bff1a;
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+}

@@ -1,0 +1,26 @@
+Quando tiver ao menos dois jogadores na sala, um match poderá ser criado/iniciado
+
+Para criar um match, devemos informar a sala (roomId)
+
+O match terá estados: ONGOING, FINISHED, CANCELED
+
+Dados do match: vencedor
+
+Turnos: será como um snapshot. Um match terá vários turnos e o turno vai guardar o estado do jogo
+
+turno {
+  players: [
+    {
+      id,
+      cards,
+    },
+  ],
+  deck,
+  discardedCards,
+  currentPlayer,
+}
+
+TODO:
+terminar CRUD de rooms
+criar domínio do match
+objetivo: próxima call começar com os turnos

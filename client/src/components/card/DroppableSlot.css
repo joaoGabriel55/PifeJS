@@ -1,0 +1,10 @@
+.droppable-slot {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  min-width: 120px;
+  min-height: 190px;
+}
+
+.droppable-slot:hover {
+  border-color: #007bff;
+}
