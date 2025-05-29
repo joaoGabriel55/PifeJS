@@ -8,6 +8,7 @@ type DiscardPileProps = {
 };
 
 export function DiscardPile({ cards }: DiscardPileProps) {
+  console.log("discard", cards)
   return (
     <DroppableSlot id="discard-pile" source="DISCARD">
       <div className="discard-pile">

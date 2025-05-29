@@ -1,39 +1,36 @@
-import { useRound } from "../../hooks/useRound";
 import "./Match.css";
 import { GameProvider } from "../../context/game/GameProvider";
 import { Board } from "./Board";
 import { useEffect, useState } from "react";
-import Websocket from "../../lib/websocket";
-import { MatchMeta } from "../../context/game/types";
+import { socket } from "../../lib/websocket";
+import { GameState } from "../../context/game/types";
 
 export function Match() {
-  const { round } = useRound();
   const [gameStarted, setGameStarted] = useState(false);
-  const [userData, setUserData] = useState<MatchMeta>({
-    userName: "",
-    currentPlayer: "",
-  });
+  const [gameState, setgameState] = useState<GameState>();
 
   useEffect(() => {
-    const socket = new Websocket();
+    socket.connect();
 
-    socket.on<MatchMeta>("gameStart", (data) => {
+    socket.on<GameState>("gameStart", (data) => {
+      console.log("data", data);
       setGameStarted(true);
-      setUserData(data);
+      setgameState(data);
     });
 
     return () => {
       socket.off("gameStart");
-      socket.disconnect();
+      
+      // socket.disconnect();
     };
   }, []);
 
-  if (!gameStarted) {
+  if (!gameStarted || !gameState) {
     return <p>Waiting for another player</p>;
   }
 
   return (
-    <GameProvider value={{ round, userData }}>
+    <GameProvider value={{ gameState }}>
       <Board />
     </GameProvider>
   );

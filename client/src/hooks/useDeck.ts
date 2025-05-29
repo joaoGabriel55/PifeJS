@@ -5,9 +5,14 @@ export const useDeck = () => {
   const [topCard, setTopCard] = useState<TCard>();
 
   const flipCard = async () => {
+    const response = await fetch("http://localhost:3000/matches/1/top-card");
+    const rawCard = await response.json();
+
     const card: TCard = {
-      id: "clubs-6",
+      ...rawCard,
       source: "DECK",
+      isFaceDown: false,
+      id: rawCard.value + "-" + rawCard.suit,
     };
 
     setTopCard(card);

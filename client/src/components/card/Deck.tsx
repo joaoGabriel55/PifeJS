@@ -8,56 +8,29 @@ type DeckProps = {
 };
 
 export function Deck({ deckSize }: DeckProps) {
-  // const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const state = useGameState();
   const { topCard, flipCard } = useDeck();
 
-  const cannotPlay = state.userData.userName !== state.userData.currentPlayer;
+
+  const cannotPlay = state.currentPlayer !== state.connectedPlayerId;
+
+  const handleFlip = async () => {
+    console.log("clicked", cannotPlay, state);
+
+    if (cannotPlay) {
+      return;
+    }
+
+    await flipCard();
+  };
 
   return (
     <div className="deck-wrapper">
       {Array.from({ length: deckSize }).map((_, index) => {
-        const isTopCard = index === deckSize - 1;
-        // const isFlipped = flippedCardId === card.id;
-        // const isDraggable = isTopCard && isFlipped;
-
-        const handleFlip = () => {
-          if (cannotPlay) {
-            return;
-          }
-
-          flipCard();
-
-          // if (isTopCard && !isFlipped) {
-          //   setFlippedCardId(card.id);
-          // }
-        };
-
-        if (topCard) {
-          return (
-            <div
-              key={index}
-              className={"deck-card-wrapper top-card"}
-              style={{ transform: `translate(${index * -5}px, 0)` }}
-            >
-              <Card
-                card={{
-                  ...topCard,
-                  isFaceDown: false,
-                }}
-                onClick={handleFlip}
-                isDraggable
-              />
-            </div>
-          );
-        }
-
         return (
           <div
             key={index}
-            className={`deck-card-wrapper ${isTopCard ? "top-card" : ""} ${
-              cannotPlay ? "blocked" : ""
-            }`}
+            className={`deck-card-wrapper ${cannotPlay ? "blocked" : ""}`}
             style={{ transform: `translate(${index * -5}px, 0)` }}
           >
             <Card
@@ -67,6 +40,22 @@ export function Deck({ deckSize }: DeckProps) {
           </div>
         );
       })}
+
+      {topCard !== undefined ? (
+        <div
+          className={"deck-card-wrapper top-card"}
+          style={{ transform: `translate(${state.deckSize * -5}px, 0)` }}
+        >
+          <Card
+            card={{
+              ...topCard,
+              isFaceDown: false,
+            }}
+            onClick={handleFlip}
+            isDraggable
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

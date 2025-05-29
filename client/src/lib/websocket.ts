@@ -1,10 +1,14 @@
 import { io, Socket } from "socket.io-client";
 
-export default class Websocket {
+class Websocket {
   private socket: Socket;
 
   constructor() {
-    this.socket = io("http://localhost:3000");
+    this.socket = io("http://localhost:3000", { autoConnect: false });
+  }
+
+  connect() {
+    this.socket.connect();
   }
 
   emit<T = unknown>({ key, value }: { key: string; value: T }) {
@@ -23,3 +27,5 @@ export default class Websocket {
     this.socket.off(key);
   }
 }
+
+export const socket = new Websocket();
