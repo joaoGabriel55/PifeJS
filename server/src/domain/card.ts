@@ -18,6 +18,7 @@ const Values = z.enum([
 ]);
 
 export const CardSchema = z.object({
+  id: z.string(),
   suit: Suits,
   value: Values,
 });

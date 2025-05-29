@@ -172,7 +172,7 @@ export class MatchService {
 
     for (const suit of suits) {
       for (const value of values) {
-        deck.push({ suit, value });
+        deck.push({ suit, value, id: `${value}-${suit}` });
       }
     }
 

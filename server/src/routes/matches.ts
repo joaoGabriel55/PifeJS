@@ -16,5 +16,7 @@ export function matchesRoutes({
 
   router.post("/", MatchesController.create);
 
+  router.get("/:id/top-card", MatchesController.getTopCard);
+
   return router;
 }

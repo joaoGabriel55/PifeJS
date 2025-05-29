@@ -36,7 +36,15 @@ export const makeMatchesController = (
     }
   };
 
+  const getTopCard = (req: Request, res: Response) => {
+    res.json({
+      value: "7",
+      suit: "CLUBS"
+    });
+  }
+
   return {
     create,
+    getTopCard,
   };
 };
