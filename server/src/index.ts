@@ -11,7 +11,7 @@ database
   .connect()
   .then(() => {
     const server = http.createServer(makeServer());
-    const io = new Server(server);
+    const io = new Server(server, {cors: { origin: '*' }});
     
     const socketService = new SocketService(io);
     socketService.initialize();

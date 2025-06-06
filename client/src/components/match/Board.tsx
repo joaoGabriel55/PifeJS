@@ -54,9 +54,15 @@ export function Board() {
         value: { cardId: over.id.toString() },
       });
     } else if (activeSource === "DISCARD" && overSource === "PLAYER") {
-      //
+      socket.emit<{ cardId: string }>({
+        key: "drawDiscard",
+        value: { cardId: over.id.toString() },
+      });
     } else if (activeSource === "DECK" && overSource === "DISCARD") {
-      //
+      socket.emit<{ cardId: string }>({
+        key: "deckDiscard",
+        value: { cardId: over.id.toString() },
+      });
     }
   };
 
