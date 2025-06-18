@@ -11,6 +11,23 @@ export const makeMatchesController = (
   matchesRepository: MatchesRepository,
   roundsRepository: RoundsRepository
 ) => {
+  const index = async (req: Request, res: Response) => {
+    const matchesService = new MatchService(
+      roomsRepository,
+      matchesRepository,
+      roundsRepository
+    );
+
+    const roomId = req.params.roomId;
+    try {
+      const matches = await matchesService.getAllByRoom(roomId);
+
+      res.json(matches);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  };
+
   const create = async (req: Request, res: Response) => {
     const matchesService = new MatchService(
       roomsRepository,
@@ -64,6 +81,7 @@ export const makeMatchesController = (
 
   return {
     create,
+    index,
     getTopCard,
   };
 };

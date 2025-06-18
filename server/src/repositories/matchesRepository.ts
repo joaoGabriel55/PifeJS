@@ -4,6 +4,12 @@ import { MatchModel } from "../infra/database/models/matchModel.js";
 import { BaseRepository } from "./baseRepository.js";
 
 export class MatchesRepository extends BaseRepository<Match> {
+  async fetchAllByRoom(roomId: string): Promise<Array<Match>> {
+    const matches = await MatchModel.query().where("roomId", roomId).where("state", "ONGOING");
+
+    return matches.map(this.parse);
+  }
+
   async create(matchData: Match): Promise<Match | null> {
     const { room, winner, rounds, ...match } = matchData;
 
@@ -37,7 +43,7 @@ export class MatchesRepository extends BaseRepository<Match> {
       ...model,
       room: {
         ...model.room,
-        players: model.room.players?.map(player => ({ id: player.id, email: player.email, name: player.name })) || [],
+        players: model.room?.players?.map(player => ({ id: player.id, email: player.email, name: player.name })) || [],
       },
       state: model.state as MatchState,
       rounds: model.rounds?.map(round => ({

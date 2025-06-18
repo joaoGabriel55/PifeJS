@@ -26,6 +26,10 @@ export class MatchService {
     this.roundsRepository = roundsRepository;
   }
 
+  async getAllByRoom(roomId: string) {
+    return await this.matchesRepository.fetchAllByRoom(roomId);
+  }
+
   async start(roomId: string) {
     const room = await this.roomsRepository.find(roomId);
 
