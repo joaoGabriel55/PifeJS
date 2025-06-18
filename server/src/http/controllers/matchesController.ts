@@ -36,11 +36,30 @@ export const makeMatchesController = (
     }
   };
 
-  const getTopCard = (req: Request, res: Response) => {
-    res.json({
-      value: "7",
-      suit: "CLUBS"
-    });
+  const getTopCard = async (req: Request, res: Response) => {
+    const matchesService = new MatchService(
+      roomsRepository,
+      matchesRepository,
+      roundsRepository
+    );
+
+    const { id } = req.params;
+
+    try {
+      const match = await matchesService.getById(id);
+
+      const topCard = matchesService.getTopCard(match);
+
+      res.json(topCard);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ message: error.message });
+      } else if (error instanceof Error) {
+        res.status(500).json({
+          message: error.message
+        });
+      }
+    }
   }
 
   return {

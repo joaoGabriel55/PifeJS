@@ -144,6 +144,26 @@ export class MatchService {
     return round;
   }
 
+  async getById(id: string) {
+    const match = await this.matchesRepository.findById(id);
+
+    if (!match) {
+      throw new NotFoundError("Match not found");
+    }
+
+    return match;
+  }
+
+  getTopCard(match: Match) {
+    const latestRound = match.rounds.reduce((latest, current) => {
+      return new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
+    });
+
+    const deck = latestRound.deck;
+
+    return deck[deck.length - 1];
+  }
+
   private createShuffleDeck(): Deck {
     const suits: Suits[] = ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"];
     const values: Values[] = [

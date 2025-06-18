@@ -26,6 +26,12 @@ export class MatchesRepository extends BaseRepository<Match> {
     });
   }
 
+  async findById(id: string): Promise<Match | null> {
+    const match = await MatchModel.query().findById(id).withGraphJoined("[room, rounds, winner]");
+
+    return match ? this.parse(match) : null;
+  }
+
   private parse(model: MatchModel): Match {
     return {
       ...model,
