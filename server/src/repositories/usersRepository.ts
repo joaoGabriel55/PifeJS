@@ -25,7 +25,7 @@ export default class UsersRepository extends BaseRepository<User> {
       if (error instanceof UniqueViolationError) {
         throw new DuplicateRecordError(error.message);
       } else {
-        throw new Error("Unknown error");
+        throw new Error(`Unknown error ${error.message}`);
       }
     }
   }

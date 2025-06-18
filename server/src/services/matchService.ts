@@ -1,6 +1,7 @@
 import { Card, Suits, Values } from "../domain/card.js";
 import { Deck } from "../domain/deck.js";
 import { Match, PLAYER_HAND_SIZE } from "../domain/match.js";
+import { Room } from "../domain/room.js";
 import { CreateRoundDto, Round } from "../domain/round.js";
 import { User } from "../domain/user.js";
 import { NotFoundError } from "../errors/notFoundError.js";
@@ -50,20 +51,12 @@ export class MatchService {
       throw new Error("Failed to create match");
     }
 
-    await this.initRound(match.id);
+    await this.initRound(match, room);
 
     return match;
   }
 
-  async initRound(matchId: string) {
-    const match = await this.matchesRepository.find(matchId);
-
-    if (!match) {
-      throw new NotFoundError("Match not found");
-    }
-
-    const room = match.room;
-
+  async initRound(match: Match, room: Room) {
     const deck = this.createShuffleDeck();
 
     const { playerHands, remainingDeck } = this.dealIntialCards(

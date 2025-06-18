@@ -1,16 +1,21 @@
-import { Model } from "objection";
+import { Model, QueryContext } from "objection";
 import { MatchModel } from "./matchModel.js";
 import { UserModel } from "./userModel.js";
+import { Hands, PlayerActions } from "../../../domain/round.js";
+import { Deck } from "../../../domain/deck.js";
 
 class RoundModel extends Model {
   static tableName = "rounds";
 
   id!: string;
-  deck!: object;
-  hands!: object;
+  deck!: Deck;
+  hands!: Hands;
+  discardPile?: Deck;
 
   matchId!: string;
   match!: MatchModel;
+
+  playerAction?: PlayerActions;
 
   currentPlayerId!: string;
   currentPlayer!: UserModel;
@@ -37,6 +42,26 @@ class RoundModel extends Model {
         },
       },
     };
+  }
+
+  static get jsonSchema() {
+    return {
+      type: 'object',
+      properties: {
+        deck: {
+          type: 'array',
+          items: { type: 'object' },
+        },
+        discardPile: {
+          type: 'array',
+          items: { type: 'object' },
+        },
+        hands: {
+          type: 'array',
+          items: { type: 'object' },
+        },
+      }
+    }
   }
 }
 
