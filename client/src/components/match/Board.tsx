@@ -5,11 +5,15 @@ import { Deck } from "../card/Deck";
 import { DiscardPile } from "../card/DicardPile";
 import { PlayerHand } from "../card/PlayerHand";
 import { useBoard } from "../../hooks/useBoard";
-import { socket } from "../../lib/websocket";
+import { getSocket } from "../../lib/websocket";
 import { useEffect } from "react";
 import { GameState } from "../../context/game/types";
 
-export function Board() {
+type BoardProps = {
+  socket: ReturnType<typeof getSocket>;
+};
+
+export function Board({ socket }: BoardProps) {
   const state = useGameState();
   const dispach = useGameDispatch();
 
@@ -28,15 +32,15 @@ export function Board() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     // if (state.currentPlayer !== state.currentPlayer) {
-      //   alert("espera");
-      
-      //   return;
-      // }
-      
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-      console.log("active", active.data.current?.source);
-      console.log("over", over.data.current?.source);
+    //   alert("espera");
+
+    //   return;
+    // }
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    console.log("active", active.data.current?.source);
+    console.log("over", over.data.current?.source);
 
     const activeSource = active.data.current?.source;
     const overSource = over.data.current?.source;

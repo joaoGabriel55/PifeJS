@@ -1,6 +1,8 @@
 import { Server, Socket } from "socket.io";
 import { Deck } from "../domain/deck.js";
 import { Card, Suits, Values } from "../domain/card.js";
+import { Repositories } from "../http/server.js";
+import { MatchService } from "./matchService.js";
 
 function createShuffleDeck() {
   const suits: Suits[] = ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"];
@@ -73,34 +75,55 @@ const currentMatch = {
 let currentPlayerIndex = 0;
 export class SocketService {
   private players: Socket[] = [];
+  private repositories: Repositories;
+  private matchesService: MatchService;
 
-  constructor(private io: Server) {}
+  constructor(private io: Server, repositories: Repositories) {
+    this.repositories = repositories;
+    this.matchesService = new MatchService(
+      new this.repositories.roomsRepository(), 
+      new this.repositories.matchesRepository(), 
+      new this.repositories.roundsRepository()
+    );
+  }
 
   initialize() {
     this.io.on("connection", this.handleConnection.bind(this));
   }
 
-  private handleConnection(socket: Socket) {
+  private async handleConnection(socket: Socket) {
     this.players.push(socket);
 
+    const matchId = socket.handshake.query.matchId as string;
+
     if (this.players.length === 2) {
+      const match = await this.matchesService.getById(matchId);
+
+      const lastRound = match.rounds[match.rounds.length - 1];
+
+      console.log('lastRound', JSON.stringify(lastRound.hands));
+
+
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("gameStart", {
-          deckSize: currentMatch.rounds[0].deck.length,
-          discardPile: [],
-          currentPlayer: this.players[0].id,
-          hand: currentMatch.rounds[0].hands[index].hand,
+          deckSize: lastRound.deck.length,
+          discardPile: lastRound.discardPile,
+          currentPlayer: lastRound.currentPlayer,
+          hand: lastRound.hands[index].hand,
           connectedPlayerId: playerSocket.id,
         });
       });
     }
 
     // "empresta" uma carta
-    socket.on("drawCard", (data) => {
-      const { cardId } = data;
+    socket.on("drawCard", async (data) => {
+      const { cardId, matchId } = data;
+
+      // const turn = await this.matchesService.playTurn(matchId, "draw_card", cardId);
+
 
       const { hands, deck, discardPile, currentPlayer } =
-      currentMatch.rounds[0];
+        currentMatch.rounds[0];
 
       const playerHand = hands.find((hand) => hand.id === currentPlayerIndex.toString());
 
@@ -132,7 +155,7 @@ export class SocketService {
       const { cardId } = data;
 
       const { hands, deck, discardPile, currentPlayer } =
-      currentMatch.rounds[0];
+        currentMatch.rounds[0];
 
       const playerHand = hands.find((hand) => hand.id === currentPlayerIndex.toString());
 
@@ -163,7 +186,7 @@ export class SocketService {
       const { cardId } = data;
 
       const { deck, discardPile, currentPlayer } =
-      currentMatch.rounds[0];
+        currentMatch.rounds[0];
 
       const [drawnCard] = deck.splice(deck.length - 1, 1); // get deck's top card
 

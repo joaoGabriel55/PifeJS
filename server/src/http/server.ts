@@ -15,6 +15,8 @@ export const repositories = {
   roundsRepository: RoundsRepository,
 } as const;
 
+export type Repositories = typeof repositories;
+
 const makeServer = () => {
   const app = express();
 

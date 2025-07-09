@@ -2,10 +2,14 @@ import "./Match.css";
 import { GameProvider } from "../../context/game/GameProvider";
 import { Board } from "./Board";
 import { useEffect, useState } from "react";
-import { socket } from "../../lib/websocket";
+import { getSocket } from "../../lib/websocket";
 import { GameState } from "../../context/game/types";
 
-export function Match() {
+type MatchProps = {
+  socket: ReturnType<typeof getSocket>;
+};
+
+export function Match({ socket }: MatchProps) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameState, setgameState] = useState<GameState>();
 
@@ -20,7 +24,7 @@ export function Match() {
 
     return () => {
       socket.off("gameStart");
-      
+
       // socket.disconnect();
     };
   }, []);
@@ -31,7 +35,7 @@ export function Match() {
 
   return (
     <GameProvider value={{ gameState }}>
-      <Board />
+      <Board socket={socket} />
     </GameProvider>
   );
 }
