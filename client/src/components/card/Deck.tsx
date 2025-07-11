@@ -9,7 +9,7 @@ type DeckProps = {
 
 export function Deck({ deckSize }: DeckProps) {
   const state = useGameState();
-  const { topCard, flipCard } = useDeck();
+  const { topCard, flipCard } = useDeck(state.matchId);
 
 
   const cannotPlay = state.currentPlayer !== state.connectedPlayerId;

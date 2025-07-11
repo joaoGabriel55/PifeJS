@@ -6,6 +6,7 @@ export type GameState = {
   currentPlayer: string;
   hand: TCard[];
   connectedPlayerId: string;
+  matchId: string;
 };
 
 export type MatchMeta = {

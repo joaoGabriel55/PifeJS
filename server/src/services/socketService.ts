@@ -108,9 +108,10 @@ export class SocketService {
         playerSocket.emit("gameStart", {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
-          currentPlayer: lastRound.currentPlayer,
+          currentPlayer: lastRound.currentPlayer || this.players[0].id,
           hand: lastRound.hands[index].hand,
           connectedPlayerId: playerSocket.id,
+          matchId: match.id,
         });
       });
     }

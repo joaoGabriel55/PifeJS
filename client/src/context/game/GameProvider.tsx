@@ -26,6 +26,7 @@ export function GameProvider({
     discardPile: gameState.discardPile.map(addSource("DISCARD")),
     currentPlayer: gameState.currentPlayer,
     connectedPlayerId: gameState.connectedPlayerId,
+    matchId: gameState.matchId,
   };
 
   const [state, dispatch] = useReducer(gameReducer, initialState);
