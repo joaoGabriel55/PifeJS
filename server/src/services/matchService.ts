@@ -87,7 +87,7 @@ export class MatchService {
   }
 
   async playTurn(matchId: string, roundData: CreateRoundDto) {
-    const match = await this.matchesRepository.find(matchId);
+    const match = await this.matchesRepository.findById(matchId);
 
     if (!match) {
       throw new NotFoundError("Match not found");
@@ -97,19 +97,11 @@ export class MatchService {
       throw new ValidationError(["Match is not ongoing"]);
     }
 
-    const lastRound = match.rounds[match.rounds.length - 1];
+    const lastRound = match.rounds[0];
     const lastPlayer = lastRound.currentPlayer;
     let currentPlayer = lastPlayer;
 
-    if (match.rounds.length > 1) {
-      const lastPlayerIndex = match.room.players.findIndex(
-        (player) => player.id === currentPlayer.id
-      );
-      const players = match.room.players.sort(this.sortByEmail);
-      const nextPlayerIndex = (lastPlayerIndex + 1) % players.length;
-
-      currentPlayer = players[nextPlayerIndex];
-    }
+    currentPlayer = match.room.players.find((player) => player.id !== lastPlayer.id) || match.room.players[0];
 
     const playerHands = roundData.hands.reduce((acc, hand) => {
       acc[hand.player.id] = hand.hand;
@@ -144,6 +136,10 @@ export class MatchService {
     }
 
     const round = await this.roundsRepository.create(newRound);
+
+    if (!round) {
+      throw new Error("Failed to create round");
+    }
 
     return round;
   }

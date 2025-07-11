@@ -33,7 +33,13 @@ export class MatchesRepository extends BaseRepository<Match> {
   }
 
   async findById(id: string): Promise<Match | null> {
-    const match = await MatchModel.query().findById(id).withGraphJoined("[room, rounds, winner]");
+    // Order rounds in descending order by their 'id' (or another field, e.g., 'createdAt' if preferred)
+    const match = await MatchModel.query()
+      .findById(id)
+      .withGraphJoined("[room.[players], rounds.[currentPlayer], winner]")
+      .modifyGraph("rounds", builder => {
+      builder.orderBy("createdAt", "desc");
+      });
 
     return match ? this.parse(match) : null;
   }

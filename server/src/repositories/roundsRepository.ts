@@ -8,7 +8,8 @@ export class RoundsRepository extends BaseRepository<Round> {
     async create(roundData: Round): Promise<Round | null> {
         const { match, ...round } = roundData;
 
-        const newRound = await RoundModel.query().insertAndFetch({
+        const newRound = await RoundModel.query()
+            .insertAndFetch({
             id: round.id,
             deck: round.deck,
             hands: round.hands,
@@ -16,7 +17,8 @@ export class RoundsRepository extends BaseRepository<Round> {
             discardPile: round.discardPile,
             createdAt: round.createdAt,
             currentPlayerId: round.currentPlayer.id,
-        });
+            })
+            .withGraphFetched('currentPlayer');
 
         return newRound ? this.parse(newRound) : null;
     }

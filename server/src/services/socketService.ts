@@ -4,75 +4,6 @@ import { Card, Suits, Values } from "../domain/card.js";
 import { Repositories } from "../http/server.js";
 import { MatchService } from "./matchService.js";
 
-function createShuffleDeck() {
-  const suits: Suits[] = ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"];
-  const values: Values[] = [
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "J",
-    "Q",
-    "K",
-    "A",
-  ];
-  let deck = [];
-
-  for (const suit of suits) {
-    for (const value of values) {
-      deck.push({ suit, value, id: `${value}-${suit}` });
-    }
-  }
-
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-
-  return deck;
-}
-
-function dealIntialCards(deck: Deck, playerCount: number) {
-  const playerHands: Card[][] = Array.from({ length: playerCount }, () => []);
-
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < playerCount; j++) {
-      playerHands[j].push(deck.shift()!);
-    }
-  }
-
-  return { playerHands, remainingDeck: deck };
-}
-
-const deck: Deck = createShuffleDeck();
-const { playerHands, remainingDeck } = dealIntialCards(deck, 2);
-
-const currentMatch = {
-  state: "ONGOING",
-  rounds: [
-    {
-      deck: remainingDeck,
-      discardPile: [],
-      hands: [
-        {
-          id: "0",
-          hand: playerHands[0],
-        },
-        {
-          id: "1",
-          hand: playerHands[1],
-        },
-      ],
-      currentPlayer: "1",
-    },
-  ],
-};
-let currentPlayerIndex = 0;
 export class SocketService {
   private players: Socket[] = [];
   private repositories: Repositories;
@@ -108,9 +39,9 @@ export class SocketService {
         playerSocket.emit("gameStart", {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
-          currentPlayer: lastRound.currentPlayer || this.players[0].id,
+          currentPlayer: lastRound.currentPlayer.id,
           hand: lastRound.hands[index].hand,
-          connectedPlayerId: playerSocket.id,
+          connectedPlayerId: lastRound.hands[index].player.id,
           matchId: match.id,
         });
       });
@@ -118,15 +49,16 @@ export class SocketService {
 
     // "empresta" uma carta
     socket.on("drawCard", async (data) => {
-      const { cardId, matchId } = data;
+      const { cardId } = data;
 
-      // const turn = await this.matchesService.playTurn(matchId, "draw_card", cardId);
+      const match = await this.matchesService.getById(matchId);
 
+      const lastRound = match.rounds[0];
 
       const { hands, deck, discardPile, currentPlayer } =
-        currentMatch.rounds[0];
+      lastRound;
 
-      const playerHand = hands.find((hand) => hand.id === currentPlayerIndex.toString());
+      const playerHand = hands.find((hand) => hand.player.id === currentPlayer.id);
 
       if (!playerHand) {
         return;
@@ -139,14 +71,31 @@ export class SocketService {
 
       (discardPile as Card[]).push(discardedCard);
 
-      currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
-      console.log("drawCard", currentPlayerIndex);
+      const newHands = hands.map(({player, hand}) => {
+        if (player.id === currentPlayer.id) {
+          return {
+            player,
+            hand: playerHand.hand,
+          };
+        }
+        return {player, hand};
+      });
+
+      const turn = await this.matchesService.playTurn(matchId, {
+        match: matchId,
+        hands: newHands,
+        deck: deck,
+        discardPile: discardPile,
+        playerAction: "DRAW",
+        createdAt: new Date(),
+      });
+
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("updateBoard", {
-          discardPile,
-          deckSize: deck.length,
-          currentPlayer: this.players[currentPlayerIndex].id,
-          hand: currentMatch.rounds[0].hands[index].hand,
+          discardPile: turn.discardPile,
+          deckSize: turn.deck.length,
+          currentPlayer: turn.currentPlayer.id,
+          hand: turn.hands[index].hand,
         });
       });
     });
