@@ -8,6 +8,7 @@ import { useBoard } from "../../hooks/useBoard";
 import { getSocket } from "../../lib/websocket";
 import { useEffect } from "react";
 import { GameState } from "../../context/game/types";
+import eventBus from "../../lib/eventBus";
 
 type BoardProps = {
   socket: ReturnType<typeof getSocket>;
@@ -19,7 +20,6 @@ export function Board({ socket }: BoardProps) {
 
   useEffect(() => {
     socket.on<GameState>("updateBoard", (data) => {
-      console.log("received", data);
       dispach({ type: "UPDATE_GAME_STATE", payload: data });
     });
 
@@ -57,6 +57,8 @@ export function Board({ socket }: BoardProps) {
         key: "drawCard",
         value: { cardId: over.id.toString() },
       });
+
+      eventBus.emit("removeTopCard");
     } else if (activeSource === "DISCARD" && overSource === "PLAYER") {
       socket.emit<{ cardId: string }>({
         key: "drawDiscard",
@@ -67,6 +69,8 @@ export function Board({ socket }: BoardProps) {
         key: "deckDiscard",
         value: { cardId: over.id.toString() },
       });
+
+      eventBus.emit("removeTopCard");
     }
   };
 

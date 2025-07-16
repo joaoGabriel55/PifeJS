@@ -2,6 +2,8 @@ import { Card } from "./Card";
 import "./Deck.css";
 import { useGameState } from "../../context/game/GameContext";
 import { useDeck } from "../../hooks/useDeck";
+import { useEffect } from "react";
+import eventBus from "../../lib/eventBus";
 
 type DeckProps = {
   deckSize: number;
@@ -9,14 +11,20 @@ type DeckProps = {
 
 export function Deck({ deckSize }: DeckProps) {
   const state = useGameState();
-  const { topCard, flipCard } = useDeck(state.matchId);
+  const { topCard, flipCard, removeTopCard } = useDeck(state.matchId);
+
+  useEffect(() => {
+    eventBus.on("removeTopCard", removeTopCard);
+
+    return () => {
+      eventBus.off("removeTopCard", removeTopCard);
+    };
+  }, []);
 
 
   const cannotPlay = state.currentPlayer !== state.connectedPlayerId;
 
   const handleFlip = async () => {
-    console.log("clicked", cannotPlay, state);
-
     if (cannotPlay) {
       return;
     }

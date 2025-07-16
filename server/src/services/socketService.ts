@@ -30,9 +30,7 @@ export class SocketService {
     if (this.players.length === 2) {
       const match = await this.matchesService.getById(matchId);
 
-      const lastRound = match.rounds[match.rounds.length - 1];
-
-      console.log('lastRound', JSON.stringify(lastRound.hands));
+      const lastRound = match.rounds[0];
 
 
       this.players.forEach((playerSocket, index) => {
@@ -101,13 +99,16 @@ export class SocketService {
     });
 
     // "empresta" uma carta do descarte
-    socket.on("drawDiscard", (data) => {
+    socket.on("drawDiscard", async (data) => {
       const { cardId } = data;
 
-      const { hands, deck, discardPile, currentPlayer } =
-        currentMatch.rounds[0];
+      const match = await this.matchesService.getById(matchId);
 
-      const playerHand = hands.find((hand) => hand.id === currentPlayerIndex.toString());
+      const lastRound = match.rounds[0];
+
+      const { hands, deck, discardPile = [], currentPlayer } = lastRound;
+
+      const playerHand = hands.find((hand) => hand.player.id === currentPlayer.id);
 
       if (!playerHand) {
         return;
@@ -120,36 +121,49 @@ export class SocketService {
 
       (discardPile as Card[]).push(discardedCard);
 
-      currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
-      console.log("drawDiscard", currentPlayerIndex);
+      const turn = await this.matchesService.playTurn(matchId, {
+        match: matchId,
+        hands: hands,
+        deck: deck,
+        discardPile: discardPile,
+        playerAction: "DRAW",
+        createdAt: new Date(),
+      });
+
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("updateBoard", {
-          discardPile,
-          deckSize: deck.length,
-          currentPlayer: this.players[currentPlayerIndex].id,
-          hand: currentMatch.rounds[0].hands[index].hand,
+          discardPile: turn.discardPile,
+          deckSize: turn.deck.length,
+          currentPlayer: turn.currentPlayer.id,
+          hand: turn.hands[index].hand,
         });
       });
     });
 
-    socket.on("deckDiscard", (data) => {
-      const { cardId } = data;
+    socket.on("deckDiscard", async (_) => {
+      const match = await this.matchesService.getById(matchId);
 
-      const { deck, discardPile, currentPlayer } =
-        currentMatch.rounds[0];
+      const { deck, discardPile } = match.rounds[0];
 
       const [drawnCard] = deck.splice(deck.length - 1, 1); // get deck's top card
 
       (discardPile as Card[]).push(drawnCard);
 
-      currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
-      console.log("drawDiscard", currentPlayerIndex);
+      const turn = await this.matchesService.playTurn(matchId, {
+        match: matchId,
+        hands: match.rounds[0].hands,
+        deck: deck,
+        discardPile: discardPile,
+        playerAction: "DISCARD",
+        createdAt: new Date(),
+      });
+
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("updateBoard", {
-          discardPile,
-          deckSize: deck.length,
-          currentPlayer: this.players[currentPlayerIndex].id,
-          hand: currentMatch.rounds[0].hands[index].hand,
+          discardPile: turn.discardPile,
+          deckSize: turn.deck.length,
+          currentPlayer: turn.currentPlayer.id,
+          hand: turn.hands[index].hand,
         });
       });
     });

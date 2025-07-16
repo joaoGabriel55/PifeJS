@@ -18,8 +18,13 @@ export const useDeck = (matchId: string) => {
     setTopCard(card);
   };
 
+  const removeTopCard = () => {
+    setTopCard(undefined);
+  };
+
   return {
     flipCard,
     topCard,
+    removeTopCard,
   };
 };

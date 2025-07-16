@@ -17,6 +17,7 @@ export class RoundsRepository extends BaseRepository<Round> {
             discardPile: round.discardPile,
             createdAt: round.createdAt,
             currentPlayerId: round.currentPlayer.id,
+            playerAction: round.playerAction,
             })
             .withGraphFetched('currentPlayer');
 

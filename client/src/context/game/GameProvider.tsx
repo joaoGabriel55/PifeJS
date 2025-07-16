@@ -23,7 +23,7 @@ export function GameProvider({
   const initialState: GameState = {
     hand: gameState.hand.map(addSource("PLAYER")),
     deckSize: gameState.deckSize,
-    discardPile: gameState.discardPile.map(addSource("DISCARD")),
+    discardPile: gameState.discardPile?.map(addSource("DISCARD")) || [],
     currentPlayer: gameState.currentPlayer,
     connectedPlayerId: gameState.connectedPlayerId,
     matchId: gameState.matchId,
