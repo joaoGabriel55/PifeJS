@@ -214,6 +214,6 @@ export class MatchService {
   }
 
   private checkForWinner(): boolean {
-    return false;
+    return true;
   }
 }

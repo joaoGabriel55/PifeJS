@@ -37,10 +37,12 @@ export class SocketService {
         playerSocket.emit("gameStart", {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
-          currentPlayer: lastRound.currentPlayer.id,
+          currentPlayer: lastRound.currentPlayer,
           hand: lastRound.hands[index].hand,
-          connectedPlayerId: lastRound.hands[index].player.id,
+          connectedPlayer: lastRound.hands[index].player,
           matchId: match.id,
+          gameFinished: false,
+          winner: null,
         });
       });
     }
@@ -92,8 +94,10 @@ export class SocketService {
         playerSocket.emit("updateBoard", {
           discardPile: turn.discardPile,
           deckSize: turn.deck.length,
-          currentPlayer: turn.currentPlayer.id,
+          currentPlayer: turn.currentPlayer,
           hand: turn.hands[index].hand,
+          gameFinished: turn.match.state === "FINISHED",
+          winner: turn.match.winner || null,
         });
       });
     });
@@ -134,8 +138,10 @@ export class SocketService {
         playerSocket.emit("updateBoard", {
           discardPile: turn.discardPile,
           deckSize: turn.deck.length,
-          currentPlayer: turn.currentPlayer.id,
+          currentPlayer: turn.currentPlayer,
           hand: turn.hands[index].hand,
+          gameFinished: turn.match.state === "FINISHED",
+          winner: turn.match.winner || null,
         });
       });
     });
@@ -162,8 +168,10 @@ export class SocketService {
         playerSocket.emit("updateBoard", {
           discardPile: turn.discardPile,
           deckSize: turn.deck.length,
-          currentPlayer: turn.currentPlayer.id,
+          currentPlayer: turn.currentPlayer,
           hand: turn.hands[index].hand,
+          gameFinished: turn.match.state === "FINISHED",
+          winner: turn.match.winner || null,
         });
       });
     });

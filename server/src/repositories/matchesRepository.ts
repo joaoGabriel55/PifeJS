@@ -32,6 +32,24 @@ export class MatchesRepository extends BaseRepository<Match> {
     });
   }
 
+  async update(id: string, data: Partial<Match>): Promise<Match | null> {
+    const { room, winner, rounds, ...matchData } = data;
+
+    try {
+        const updatedMatch = await MatchModel.query()
+          .findById(id)
+          .patchAndFetch({
+            ...matchData,
+            roomId: room?.id,
+            winnerId: winner?.id,
+          }).withGraphJoined("[room, rounds, winner]");
+
+        return updatedMatch ? this.parse(updatedMatch) : null;
+    } catch (error) {
+      throw new Error("Failed to create match");
+    }
+  }
+
   async findById(id: string): Promise<Match | null> {
     // Order rounds in descending order by their 'id' (or another field, e.g., 'createdAt' if preferred)
     const match = await MatchModel.query()

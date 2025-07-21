@@ -1,0 +1,8 @@
+.player-info {
+  position: absolute;
+  bottom: 50%;
+  left: 10px;
+  transform: translateY(50%);
+  color: white;
+  font-weight: bold;
+}

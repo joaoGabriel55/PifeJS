@@ -5,9 +5,10 @@ import "./DiscardPile.css";
 
 type DiscardPileProps = {
   cards: TCard[];
+  blocked: boolean;
 };
 
-export function DiscardPile({ cards }: DiscardPileProps) {
+export function DiscardPile({ cards, blocked }: DiscardPileProps) {
   console.log("discard", cards)
   return (
     <DroppableSlot id="discard-pile" source="DISCARD">
@@ -24,7 +25,7 @@ export function DiscardPile({ cards }: DiscardPileProps) {
                 className="deck-card-wrapper"
                 style={{ transform: `translate(${index * 5}px, 0)` }}
               >
-                <Card card={card} isDraggable={isTopCard} />
+                <Card card={card} isDraggable={!blocked && isTopCard} />
               </div>
             );
           })

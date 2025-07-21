@@ -6,9 +6,10 @@ import { DiscardPile } from "../card/DicardPile";
 import { PlayerHand } from "../card/PlayerHand";
 import { useBoard } from "../../hooks/useBoard";
 import { getSocket } from "../../lib/websocket";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GameState } from "../../context/game/types";
 import eventBus from "../../lib/eventBus";
+import "./Board.css";
 
 type BoardProps = {
   socket: ReturnType<typeof getSocket>;
@@ -17,11 +18,15 @@ type BoardProps = {
 export function Board({ socket }: BoardProps) {
   const state = useGameState();
   const dispach = useGameDispatch();
+  const [blockDiscardPile, setBlockDiscardPile] = useState(false);
 
   useEffect(() => {
     socket.on<GameState>("updateBoard", (data) => {
       dispach({ type: "UPDATE_GAME_STATE", payload: data });
     });
+    eventBus.on("blockDiscardPile", () => {
+      setBlockDiscardPile(true);
+    })
 
     return () => {
       socket.off("updateBoard");
@@ -74,6 +79,8 @@ export function Board({ socket }: BoardProps) {
     }
   };
 
+  console.log("state", state);
+
   return (
     <div className="board">
       <section className="opponent-hand">
@@ -84,12 +91,15 @@ export function Board({ socket }: BoardProps) {
       <DndContext onDragEnd={handleDragEnd} modifiers={[restrictToWindowEdges]}>
         <section className="mid-section">
           <Deck deckSize={state.deckSize} />
-          <DiscardPile cards={state.discardPile} />
+          <DiscardPile cards={state.discardPile} blocked={blockDiscardPile} />
         </section>
         <section className="player-hand">
           <PlayerHand cards={state.hand} />
         </section>
-        {/* <p>{state.currentPlayer}</p> */}
+        <div className="player-info">
+          <p>Current Player: {state.currentPlayer.name || state.currentPlayer.email}</p>
+          <p>Connected Player: {state.connectedPlayer.name || state.connectedPlayer.email}</p>
+        </div>
       </DndContext>
     </div>
   );

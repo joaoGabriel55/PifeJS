@@ -22,7 +22,7 @@ export function Deck({ deckSize }: DeckProps) {
   }, []);
 
 
-  const cannotPlay = state.currentPlayer !== state.connectedPlayerId;
+  const cannotPlay = state.currentPlayer.id !== state.connectedPlayer.id;
 
   const handleFlip = async () => {
     if (cannotPlay) {
@@ -30,6 +30,7 @@ export function Deck({ deckSize }: DeckProps) {
     }
 
     await flipCard();
+    eventBus.emit("blockDiscardPile");
   };
 
   return (

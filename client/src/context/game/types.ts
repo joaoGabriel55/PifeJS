@@ -3,11 +3,17 @@ import { TCard } from "../../components/card/CardDisplay";
 export type GameState = {
   deckSize: number;
   discardPile: TCard[];
-  currentPlayer: string;
+  currentPlayer: Player;
   hand: TCard[];
-  connectedPlayerId: string;
+  connectedPlayer: Player;
   matchId: string;
 };
+
+type Player = {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 export type MatchMeta = {
   userName: string;
