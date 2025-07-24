@@ -56,10 +56,21 @@ export class MatchesRepository extends BaseRepository<Match> {
       .findById(id)
       .withGraphJoined("[room.[players], rounds.[currentPlayer], winner]")
       .modifyGraph("rounds", builder => {
-      builder.orderBy("createdAt", "desc");
+        builder.orderBy("createdAt", "desc");
       });
 
     return match ? this.parse(match) : null;
+  }
+
+  async update(id: string, matchData: Partial<Omit<Match, 'room' | 'rounds'>>): Promise<Match | null> {
+    const { winner, ...matchDetails } = matchData;
+
+    const updatedMatch = await MatchModel.query()
+      .findById(id)
+      .patchAndFetchById(id, { ...matchDetails, winnerId: winner?.id })
+      .withGraphFetched("[room, rounds, winner]");
+
+    return updatedMatch ? this.parse(updatedMatch) : null;
   }
 
   private parse(model: MatchModel): Match {
@@ -76,6 +87,11 @@ export class MatchesRepository extends BaseRepository<Match> {
         discardPile: round.discardPile as Deck,
         match: round.match as Match,
       })) || [],
+      winner: model.winner ? {
+        id: model.winner.id,
+        email: model.winner.email,
+        name: model.winner.name,
+      } : undefined,
     }
   }
 }

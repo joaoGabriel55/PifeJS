@@ -12,8 +12,8 @@ export class SocketService {
   constructor(private io: Server, repositories: Repositories) {
     this.repositories = repositories;
     this.matchesService = new MatchService(
-      new this.repositories.roomsRepository(), 
-      new this.repositories.matchesRepository(), 
+      new this.repositories.roomsRepository(),
+      new this.repositories.matchesRepository(),
       new this.repositories.roundsRepository()
     );
   }
@@ -30,8 +30,16 @@ export class SocketService {
     if (this.players.length === 2) {
       const match = await this.matchesService.getById(matchId);
 
-      const lastRound = match.rounds[0];
+      if (match.state === "FINISHED") {
+        this.players.forEach((playerSocket) => {
+          playerSocket.emit("gameOver", {
+            winner: match.winner,
+          });
+        });
+        return;
+      }
 
+      const lastRound = match.rounds[0];
 
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("gameStart", {
@@ -56,7 +64,7 @@ export class SocketService {
       const lastRound = match.rounds[0];
 
       const { hands, deck, discardPile, currentPlayer } =
-      lastRound;
+        lastRound;
 
       const playerHand = hands.find((hand) => hand.player.id === currentPlayer.id);
 
@@ -71,14 +79,14 @@ export class SocketService {
 
       (discardPile as Card[]).push(discardedCard);
 
-      const newHands = hands.map(({player, hand}) => {
+      const newHands = hands.map(({ player, hand }) => {
         if (player.id === currentPlayer.id) {
           return {
             player,
             hand: playerHand.hand,
           };
         }
-        return {player, hand};
+        return { player, hand };
       });
 
       const turn = await this.matchesService.playTurn(matchId, {
@@ -89,6 +97,15 @@ export class SocketService {
         playerAction: "DRAW",
         createdAt: new Date(),
       });
+
+      if (turn.match.state === "FINISHED") {
+        this.players.forEach((playerSocket) => {
+          playerSocket.emit("gameOver", {
+            winner: turn.match.winner,
+          });
+        });
+        return;
+      }
 
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("updateBoard", {
@@ -133,6 +150,15 @@ export class SocketService {
         playerAction: "DRAW",
         createdAt: new Date(),
       });
+
+      if (turn.match.state === "FINISHED") {
+        this.players.forEach((playerSocket) => {
+          playerSocket.emit("gameOver", {
+            winner: turn.match.winner,
+          });
+        });
+        return;
+      }
 
       this.players.forEach((playerSocket, index) => {
         playerSocket.emit("updateBoard", {

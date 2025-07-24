@@ -9,7 +9,7 @@ export type GameState = {
   matchId: string;
 };
 
-type Player = {
+export type Player = {
   id: string;
   email: string;
   name?: string;

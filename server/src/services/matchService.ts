@@ -99,9 +99,8 @@ export class MatchService {
 
     const lastRound = match.rounds[0];
     const lastPlayer = lastRound.currentPlayer;
-    let currentPlayer = lastPlayer;
 
-    currentPlayer = match.room.players.find((player) => player.id !== lastPlayer.id) || match.room.players[0];
+    const currentPlayer = match.room.players.find((player) => player.id !== lastPlayer.id) as User;
 
     const playerHands = roundData.hands.reduce((acc, hand) => {
       acc[hand.player.id] = hand.hand;
@@ -122,7 +121,7 @@ export class MatchService {
       playerAction: roundData.playerAction,
     };
 
-    if (this.checkForWinner()) {
+    if (this.checkForWinner(playerHands[currentPlayer.id])) {
       match.state = "FINISHED";
       match.winner = currentPlayer;
 
@@ -213,7 +212,79 @@ export class MatchService {
     return a.email.localeCompare(b.email);
   }
 
-  private checkForWinner(): boolean {
-    return true;
+  private checkForWinner(cards: Card[]): boolean {
+    const cardsMap = {
+      'A': 1,
+      '2': 2,
+      '3': 3,
+      '4': 4,
+      '5': 5,
+      '6': 6,
+      '7': 7,
+      '8': 8,
+      '9': 9,
+      '10': 10,
+      'J': 11,
+      'Q': 12,
+      'K': 13,
+    };
+
+    const validGame: Card[] = [
+      { suit: "SPADES", value: "A", id: "A-SPADES" },
+      { suit: "HEARTS", value: "A", id: "A-HEARTS" },
+      { suit: "DIAMONDS", value: "A", id: "A-DIAMONDS" },
+      { suit: "CLUBS", value: "2", id: "2-CLUBS" },
+      { suit: "CLUBS", value: "3", id: "3-CLUBS" },
+      { suit: "CLUBS", value: "4", id: "4-CLUBS" },
+      { suit: "CLUBS", value: "Q", id: "Q-CLUBS" },
+      { suit: "CLUBS", value: "K", id: "K-CLUBS" },
+      { suit: "CLUBS", value: "A", id: "A-CLUBS" },
+    ];
+
+    const newCards = validGame.map((card) => {
+      return {
+        ...card,
+        value: cardsMap[card.value],
+      };
+    });
+
+    function isSequence(cards: typeof newCards) {
+      const values = cards.map((card) => card.value).sort((a, b) => a - b);
+
+      return (
+        (values[0] + 1 === values[1] && values[1] + 1 === values[2]) ||
+        (values.includes(12) && values.includes(13) && values.includes(1)) // Q, K, A
+      );
+    }
+
+    function isSameValue(cards: typeof newCards) {
+      return (
+        cards[0].value === cards[1].value &&
+        cards[1].value === cards[2].value &&
+        new Set(cards.map((card) => card.suit)).size === 3
+      );
+    }
+
+    function findSets(cards: typeof newCards, setsFound: number) {
+      if (setsFound === 3) return true;
+      if (cards.length < 3) return false;
+
+      for (let i = 0; i < cards.length - 2; i++) {
+        for (let j = i + 1; j < cards.length - 1; j++) {
+          for (let k = j + 1; k < cards.length; k++) {
+            const selectedCards = [cards[i], cards[j], cards[k]];
+            if (isSameValue(selectedCards) || isSequence(selectedCards)) {
+              const remainingCards = cards.filter(
+                (_, index) => index !== i && index !== j && index !== k
+              );
+              if (findSets(remainingCards, setsFound + 1)) return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    return findSets(newCards, 0);
   }
 }

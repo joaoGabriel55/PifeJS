@@ -19,7 +19,7 @@ export class RoundsRepository extends BaseRepository<Round> {
             currentPlayerId: round.currentPlayer.id,
             playerAction: round.playerAction,
             })
-            .withGraphFetched('currentPlayer, match.[winner]');
+            .withGraphFetched("[match.[winner], currentPlayer]");
 
         return newRound ? this.parse(newRound) : null;
     }
