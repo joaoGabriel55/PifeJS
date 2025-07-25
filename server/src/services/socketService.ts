@@ -3,14 +3,16 @@ import { Deck } from "../domain/deck.js";
 import { Card, Suits, Values } from "../domain/card.js";
 import { Repositories } from "../http/server.js";
 import { MatchService } from "./matchService.js";
+import { verifyToken } from "../shared/jwtToken.js";
 
 export class SocketService {
-  private players: Socket[] = [];
+  private players: Record<string, Socket>;
   private repositories: Repositories;
   private matchesService: MatchService;
 
   constructor(private io: Server, repositories: Repositories) {
     this.repositories = repositories;
+    this.players = {};
     this.matchesService = new MatchService(
       new this.repositories.roomsRepository(),
       new this.repositories.matchesRepository(),
@@ -23,15 +25,17 @@ export class SocketService {
   }
 
   private async handleConnection(socket: Socket) {
-    this.players.push(socket);
+    const { userId } = verifyToken(socket.handshake.auth.token);
+
+    this.players[userId] = socket;
 
     const matchId = socket.handshake.query.matchId as string;
 
-    if (this.players.length === 2) {
+    if (Object.keys(this.players).length === 2) {
       const match = await this.matchesService.getById(matchId);
 
       if (match.state === "FINISHED") {
-        this.players.forEach((playerSocket) => {
+        Object.values(this.players).forEach((playerSocket: Socket) => {
           playerSocket.emit("gameOver", {
             winner: match.winner,
           });
@@ -41,13 +45,13 @@ export class SocketService {
 
       const lastRound = match.rounds[0];
 
-      this.players.forEach((playerSocket, index) => {
+      Object.values(this.players).forEach((playerSocket: Socket, index: number) => {
         playerSocket.emit("gameStart", {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
           currentPlayer: lastRound.currentPlayer,
-          hand: lastRound.hands[index].hand,
-          connectedPlayer: lastRound.hands[index].player,
+          hand: lastRound.hands.find(hand => hand.player.id === userId)?.hand,
+          connectedPlayer: lastRound.hands.find(hand => hand.player.id !== userId)?.player,
           matchId: match.id,
           gameFinished: false,
           winner: null,

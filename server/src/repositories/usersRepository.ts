@@ -10,6 +10,11 @@ export default class UsersRepository extends BaseRepository<User> {
     return user || null;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await UserModel.query().findOne({ email });
+    return user || null;
+  }
+
   async findByIds(ids: Array<string>): Promise<Array<User>> {
     return await UserModel.query().whereIn("id", ids);
   }

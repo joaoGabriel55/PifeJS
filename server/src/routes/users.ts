@@ -14,6 +14,8 @@ export function usersRoutes({ usersRepository }: Repositories) {
 
   router.post("/", validateSchema(CreateUserDtoSchema), UsersController.create);
 
+  router.post("/login", UsersController.login);
+
   router.put(
     "/:id",
     validateSchema(UpdateUserDtoSchema),

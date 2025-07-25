@@ -2,7 +2,7 @@ import { CreateUserDto, UpdateUserDto } from "../domain/user.js";
 import { NotFoundError } from "../errors/notFoundError.js";
 import UsersRepository from "../repositories/usersRepository.js";
 import { generateId } from "../shared/entityId.js";
-
+import bcrypt from "bcryptjs";
 export class UserService {
   private readonly repository: UsersRepository;
 
@@ -24,8 +24,19 @@ export class UserService {
     return user;
   }
 
+  async getByEmail(email: string) {
+    const user = await this.repository.findByEmail(email);
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+    return user;
+  }
+
   async create(userData: CreateUserDto) {
-    const newUser = { ...userData, id: generateId() };
+    const {password, ...userWithoutPassword} = userData;
+    const encryptedPassword = await bcrypt.hash(password, 10);
+    const newUser = { ...userWithoutPassword, id: generateId(), encryptedPassword };
+
     return await this.repository.create(newUser);
   }
 

@@ -4,7 +4,7 @@ class Websocket {
   private socket: Socket;
 
   constructor(query: Record<string, string> = {}) {
-    this.socket = io("http://localhost:3000", { autoConnect: false, query });
+    this.socket = io("http://localhost:3000", { autoConnect: false, query, auth: { token: localStorage.getItem("token") || "" } });
   }
 
   connect() {

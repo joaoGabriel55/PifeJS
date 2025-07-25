@@ -1,5 +1,6 @@
 import { RoomsRepository } from "../../repositories/roomsRepository.js";
 import UsersRepository from "../../repositories/usersRepository.js";
+import { UserService } from "../../services/usersService.js";
 import { generateId } from "../../shared/entityId.js";
 import { makeDatabase } from "./database.js";
 
@@ -7,17 +8,18 @@ const database = makeDatabase();
 
 async function main() {
     const usersRepository = new UsersRepository();
+    const userService = new UserService(usersRepository);
 
-    const user1 = await usersRepository.create({
-        id: generateId(),
+    const user1 = await userService.create({
         email: "test1@exmple.com",
         name: "Daniel",
+        password: "Brasil123"
     })
 
-    const user2 = await usersRepository.create({
-        id: generateId(),
+    const user2 = await userService.create({
         email: "test2@exmple.com",
         name: "Joao",
+        password: "Paysandu123"
     })
 
     if (!user1 || !user2) throw new Error('failed to create users')

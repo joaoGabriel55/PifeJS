@@ -229,6 +229,7 @@ export class MatchService {
       'K': 13,
     };
 
+    // delete later
     const validGame: Card[] = [
       { suit: "SPADES", value: "A", id: "A-SPADES" },
       { suit: "HEARTS", value: "A", id: "A-HEARTS" },
