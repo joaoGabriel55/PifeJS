@@ -30,7 +30,7 @@ export default function RoomsPage() {
 
   return (
     <>
-      <h1>Room</h1>
+      <h1>Rooms</h1>
 
       {rooms.map((room) => (
         <a key={room.id} href={`/rooms/${room.id}`}>
