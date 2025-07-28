@@ -1,6 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { Deck } from "../domain/deck.js";
-import { Card, Suits, Values } from "../domain/card.js";
+import { Card } from "../domain/card.js";
 import { Repositories } from "../http/server.js";
 import { MatchService } from "./matchService.js";
 import { verifyToken } from "../shared/jwtToken.js";
@@ -45,7 +44,7 @@ export class SocketService {
 
       const lastRound = match.rounds[0];
 
-      Object.values(this.players).forEach((playerSocket: Socket, index: number) => {
+      Object.entries(this.players).forEach(([userId, playerSocket]) => {
         playerSocket.emit("gameStart", {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
@@ -103,7 +102,7 @@ export class SocketService {
       });
 
       if (turn.match.state === "FINISHED") {
-        this.players.forEach((playerSocket) => {
+        Object.values(this.players).forEach((playerSocket) => {
           playerSocket.emit("gameOver", {
             winner: turn.match.winner,
           });
@@ -111,12 +110,12 @@ export class SocketService {
         return;
       }
 
-      this.players.forEach((playerSocket, index) => {
+      Object.entries(this.players).forEach(([userId, playerSocket]) => {
         playerSocket.emit("updateBoard", {
           discardPile: turn.discardPile,
           deckSize: turn.deck.length,
-          currentPlayer: turn.currentPlayer,
-          hand: turn.hands[index].hand,
+          currentPlayer: turn.nextPlayer,
+          hand: turn.hands.find(hand => hand.player.id === userId)?.hand,
           gameFinished: turn.match.state === "FINISHED",
           winner: turn.match.winner || null,
         });
@@ -156,7 +155,7 @@ export class SocketService {
       });
 
       if (turn.match.state === "FINISHED") {
-        this.players.forEach((playerSocket) => {
+        Object.values(this.players).forEach((playerSocket) => {
           playerSocket.emit("gameOver", {
             winner: turn.match.winner,
           });
@@ -164,12 +163,12 @@ export class SocketService {
         return;
       }
 
-      this.players.forEach((playerSocket, index) => {
+      Object.entries(this.players).forEach(([userId, playerSocket]) => {
         playerSocket.emit("updateBoard", {
           discardPile: turn.discardPile,
           deckSize: turn.deck.length,
-          currentPlayer: turn.currentPlayer,
-          hand: turn.hands[index].hand,
+          currentPlayer: turn.nextPlayer,
+          hand: turn.hands.find(hand => hand.player.id === userId)?.hand,
           gameFinished: turn.match.state === "FINISHED",
           winner: turn.match.winner || null,
         });
@@ -194,12 +193,12 @@ export class SocketService {
         createdAt: new Date(),
       });
 
-      this.players.forEach((playerSocket, index) => {
+      Object.entries(this.players).forEach(([userId, playerSocket]) => {
         playerSocket.emit("updateBoard", {
           discardPile: turn.discardPile,
           deckSize: turn.deck.length,
-          currentPlayer: turn.currentPlayer,
-          hand: turn.hands[index].hand,
+          currentPlayer: turn.nextPlayer,
+          hand: turn.hands.find(hand => hand.player.id === userId)?.hand,
           gameFinished: turn.match.state === "FINISHED",
           winner: turn.match.winner || null,
         });
@@ -207,8 +206,8 @@ export class SocketService {
     });
 
     socket.on("disconnect", () => {
-      this.players = this.players.filter((s) => s.id !== socket.id);
-      console.log("user disconnected", socket.id);
+      delete this.players[userId];
+      console.log("user disconnected", userId);
     });
   }
 }

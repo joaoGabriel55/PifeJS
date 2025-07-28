@@ -99,8 +99,13 @@ export class MatchService {
 
     const lastRound = match.rounds[0];
     const lastPlayer = lastRound.currentPlayer;
+    let currentPlayer = lastPlayer;
 
-    const currentPlayer = match.room.players.find((player) => player.id !== lastPlayer.id) as User;
+    if (match.rounds.length > 1) {
+      currentPlayer = match.room.players.find((player) => player.id !== lastPlayer.id) as User;
+    }
+
+    const nextPlayer = match.room.players.find((player) => player.id !== currentPlayer.id) as User;
 
     const playerHands = roundData.hands.reduce((acc, hand) => {
       acc[hand.player.id] = hand.hand;
@@ -140,7 +145,7 @@ export class MatchService {
       throw new Error("Failed to create round");
     }
 
-    return round;
+    return { ...round, nextPlayer };
   }
 
   async getById(id: string) {
@@ -229,20 +234,7 @@ export class MatchService {
       'K': 13,
     };
 
-    // delete later
-    const validGame: Card[] = [
-      { suit: "SPADES", value: "A", id: "A-SPADES" },
-      { suit: "HEARTS", value: "A", id: "A-HEARTS" },
-      { suit: "DIAMONDS", value: "A", id: "A-DIAMONDS" },
-      { suit: "CLUBS", value: "2", id: "2-CLUBS" },
-      { suit: "CLUBS", value: "3", id: "3-CLUBS" },
-      { suit: "CLUBS", value: "4", id: "4-CLUBS" },
-      { suit: "CLUBS", value: "Q", id: "Q-CLUBS" },
-      { suit: "CLUBS", value: "K", id: "K-CLUBS" },
-      { suit: "CLUBS", value: "A", id: "A-CLUBS" },
-    ];
-
-    const newCards = validGame.map((card) => {
+    const newCards = cards.map((card) => {
       return {
         ...card,
         value: cardsMap[card.value],
