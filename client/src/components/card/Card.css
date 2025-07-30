@@ -11,6 +11,7 @@
     background-color: #fff;
     color: black;
     border: 1px solid black;
+    height: 100%;
 
     .value {
       align-self: center;
@@ -22,6 +23,7 @@
     }
 
     .suit {
+      align-self: start;
       font-size: 32px;
 
       &.red {
