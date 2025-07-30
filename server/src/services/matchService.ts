@@ -68,7 +68,7 @@ export class MatchService {
       room.players.length
     );
 
-    const currentPlayer = room.players.sort(this.sortByEmail)[0];
+    const player = room.players.sort(this.sortByEmail)[0];
 
     const round: Round = {
       id: generateId(),
@@ -79,7 +79,8 @@ export class MatchService {
       })),
       match,
       discardPile: [],
-      currentPlayer,
+      player,
+      nextPlayer: player,
       createdAt: new Date(),
     };
 
@@ -98,14 +99,9 @@ export class MatchService {
     }
 
     const lastRound = match.rounds[0];
-    const lastPlayer = lastRound.currentPlayer;
-    let currentPlayer = lastPlayer;
+    const currentPlayer = lastRound.nextPlayer;
 
-    if (match.rounds.length > 1) {
-      currentPlayer = match.room.players.find((player) => player.id !== lastPlayer.id) as User;
-    }
-
-    const nextPlayer = match.room.players.find((player) => player.id !== currentPlayer.id) as User;
+    const nextPlayer = match.room.players.find((player) => player.id !== currentPlayer!.id) as User;
 
     const playerHands = roundData.hands.reduce((acc, hand) => {
       acc[hand.player.id] = hand.hand;
@@ -115,7 +111,8 @@ export class MatchService {
     const newRound: Round = {
       id: generateId(),
       match,
-      currentPlayer,
+      player: currentPlayer!,
+      nextPlayer,
       createdAt: new Date(),
       hands: match.room.players.map((player) => ({
         player,
@@ -126,7 +123,7 @@ export class MatchService {
       playerAction: roundData.playerAction,
     };
 
-    if (this.checkForWinner(playerHands[currentPlayer.id])) {
+    if (this.checkForWinner(playerHands[currentPlayer!.id])) {
       match.state = "FINISHED";
       match.winner = currentPlayer;
 
@@ -145,7 +142,7 @@ export class MatchService {
       throw new Error("Failed to create round");
     }
 
-    return { ...round, nextPlayer };
+    return round;
   }
 
   async getById(id: string) {

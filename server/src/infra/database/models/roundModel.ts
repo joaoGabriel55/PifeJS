@@ -17,8 +17,11 @@ class RoundModel extends Model {
 
   playerAction?: PlayerActions;
 
-  currentPlayerId!: string;
-  currentPlayer!: UserModel;
+  playerId!: string;
+  player!: UserModel;
+
+  nextPlayerId?: string;
+  nextPlayer?: UserModel;
 
   createdAt!: Date;
   updatedAt?: Date;
@@ -33,11 +36,19 @@ class RoundModel extends Model {
           to: "matches.id",
         },
       },
-      currentPlayer: {
+      player: {
         relation: Model.BelongsToOneRelation,
         modelClass: UserModel,
         join: {
-          from: "rounds.currentPlayerId",
+          from: "rounds.playerId",
+          to: "users.id",
+        },
+      },
+      nextPlayer: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: UserModel,
+        join: {
+          from: "rounds.nextPlayerId",
           to: "users.id",
         },
       },

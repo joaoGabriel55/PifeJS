@@ -48,7 +48,7 @@ export class SocketService {
         playerSocket.emit("gameStart", {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
-          currentPlayer: lastRound.currentPlayer,
+          currentPlayer: lastRound.nextPlayer,
           hand: lastRound.hands.find(hand => hand.player.id === userId)!.hand,
           connectedPlayer: lastRound.hands.find(hand => hand.player.id === userId)!.player,
           matchId: match.id,
@@ -63,12 +63,13 @@ export class SocketService {
 
       const match = await this.matchesService.getById(matchId);
 
+      console.log("rounds", match.rounds);
       const lastRound = match.rounds[0];
 
-      const { hands, deck, discardPile, currentPlayer } =
+      const { hands, deck, discardPile, nextPlayer } =
         lastRound;
 
-      const playerHand = hands.find((hand) => hand.player.id === currentPlayer.id);
+      const playerHand = hands.find((hand) => hand.player.id === nextPlayer!.id);
 
       if (!playerHand) {
         return;
@@ -82,7 +83,7 @@ export class SocketService {
       (discardPile as Card[]).push(discardedCard);
 
       const newHands = hands.map(({ player, hand }) => {
-        if (player.id === currentPlayer.id) {
+        if (player.id === nextPlayer!.id) {
           return {
             player,
             hand: playerHand.hand,
@@ -128,9 +129,9 @@ export class SocketService {
 
       const lastRound = match.rounds[0];
 
-      const { hands, deck, discardPile = [], currentPlayer } = lastRound;
+      const { hands, deck, discardPile = [], nextPlayer } = lastRound;
 
-      const playerHand = hands.find((hand) => hand.player.id === currentPlayer.id);
+      const playerHand = hands.find((hand) => hand.player.id === nextPlayer!.id);
 
       if (!playerHand) {
         return;

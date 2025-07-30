@@ -21,7 +21,8 @@ const BaseRoundSchema = z.object({
   playerAction: PlayerActionsSchema.optional(),
   deck: DeckSchema,
   discardPile: z.array(CardSchema).default([]).optional(),
-  currentPlayer: UserSchema,
+  player: UserSchema,
+  nextPlayer: UserSchema.optional(),
   hands: HandsSchema,
   createdAt: z.date({ coerce: true }),
   updatedAt: z.date({ coerce: true }).optional(),
@@ -38,7 +39,8 @@ export const RoundSchema: z.ZodType<Round> = BaseRoundSchema.extend({
 const CreateRoundSchema = BaseRoundSchema.omit({
   id: true,
   updatedAt: true,
-  currentPlayer: true,
+  player: true,
+  nextPlayer: true,
 }).extend({
   hands: z.array(
     z.object({

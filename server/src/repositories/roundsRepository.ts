@@ -16,10 +16,11 @@ export class RoundsRepository extends BaseRepository<Round> {
             matchId: match.id,
             discardPile: round.discardPile,
             createdAt: round.createdAt,
-            currentPlayerId: round.currentPlayer.id,
+            playerId: round.player.id,
+            nextPlayerId: round.nextPlayer?.id,
             playerAction: round.playerAction,
             })
-            .withGraphFetched("[match.[winner], currentPlayer]");
+            .withGraphFetched("[match.[winner], player, nextPlayer]");
 
         return newRound ? this.parse(newRound) : null;
     }

@@ -54,23 +54,12 @@ export class MatchesRepository extends BaseRepository<Match> {
     // Order rounds in descending order by their 'id' (or another field, e.g., 'createdAt' if preferred)
     const match = await MatchModel.query()
       .findById(id)
-      .withGraphJoined("[room.[players], rounds.[currentPlayer], winner]")
+      .withGraphJoined("[room.[players], rounds.[player, nextPlayer], winner]")
       .modifyGraph("rounds", builder => {
         builder.orderBy("createdAt", "desc");
       });
 
     return match ? this.parse(match) : null;
-  }
-
-  async update(id: string, matchData: Partial<Omit<Match, 'room' | 'rounds'>>): Promise<Match | null> {
-    const { winner, ...matchDetails } = matchData;
-
-    const updatedMatch = await MatchModel.query()
-      .findById(id)
-      .patchAndFetchById(id, { ...matchDetails, winnerId: winner?.id })
-      .withGraphFetched("[room, rounds, winner]");
-
-    return updatedMatch ? this.parse(updatedMatch) : null;
   }
 
   private parse(model: MatchModel): Match {
@@ -86,6 +75,16 @@ export class MatchesRepository extends BaseRepository<Match> {
         deck: round.deck as Deck,
         discardPile: round.discardPile as Deck,
         match: round.match as Match,
+        player: {
+          id: round.player.id,
+          email: round.player.email,
+          name: round.player.name,
+        },
+        nextPlayer: round.nextPlayer ? {
+          id: round.nextPlayer.id,
+          email: round.nextPlayer.email,
+          name: round.nextPlayer.name,
+        } : undefined,
       })) || [],
       winner: model.winner ? {
         id: model.winner.id,
