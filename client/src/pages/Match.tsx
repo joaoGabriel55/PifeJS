@@ -1,8 +1,11 @@
 import { useParams } from "react-router";
 import { Match } from "../components/match/Match";
+import { getSocket } from "../lib/websocket";
 
 export default function MatchPage() {
-  const { id, matchId } = useParams();
+  const { matchId } = useParams();
 
-  return <Match id={matchId as string} roomId={id as string} />;
+  const socket = getSocket({ matchId: matchId as string });
+
+  return <Match socket={socket} />;
 }

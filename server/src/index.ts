@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { config } from "./config.js";
-import { makeServer } from "./http/server.js";
+import { makeServer, repositories } from "./http/server.js";
 import { makeDatabase } from "./infra/database/database.js";
 import http from "http";
 import { SocketService } from "./services/socketService.js";
@@ -11,9 +11,9 @@ database
   .connect()
   .then(() => {
     const server = http.createServer(makeServer());
-    const io = new Server(server);
+    const io = new Server(server, {cors: { origin: '*' }});
     
-    const socketService = new SocketService(io);
+    const socketService = new SocketService(io, repositories);
     socketService.initialize();
 
     server.listen(config.http.port, () => {

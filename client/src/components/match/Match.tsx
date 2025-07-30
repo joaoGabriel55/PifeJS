@@ -1,40 +1,58 @@
-import { useRound } from "../../hooks/useRound";
 import "./Match.css";
 import { GameProvider } from "../../context/game/GameProvider";
 import { Board } from "./Board";
 import { useEffect, useState } from "react";
-import Websocket from "../../lib/websocket";
-import { MatchMeta } from "../../context/game/types";
+import { getSocket } from "../../lib/websocket";
+import { GameState, Player } from "../../context/game/types";
+import { GameOverModal } from "../GameOverModal";
 
-export function Match() {
-  const { round } = useRound();
+type MatchProps = {
+  socket: ReturnType<typeof getSocket>;
+};
+
+export function Match({ socket }: MatchProps) {
   const [gameStarted, setGameStarted] = useState(false);
-  const [userData, setUserData] = useState<MatchMeta>({
-    userName: "",
-    currentPlayer: "",
+  const [gameState, setgameState] = useState<GameState>();
+  const [gameOverModal, setGameOverModal] = useState<{
+    open: boolean;
+    winner: Player | null;
+  }>({
+    open: false,
+    winner: null,
   });
 
   useEffect(() => {
-    const socket = new Websocket();
+    socket.connect();
 
-    socket.on<MatchMeta>("gameStart", (data) => {
+    socket.on<GameState>("gameStart", (data) => {
+      console.log("data", data);
       setGameStarted(true);
-      setUserData(data);
+      setgameState(data);
+    });
+
+    socket.on("gameOver", (data: { winner: Player }) => {
+      console.log("gameOver", data);
+      setGameOverModal({
+        open: true,
+        winner: data.winner,
+      });
     });
 
     return () => {
       socket.off("gameStart");
-      socket.disconnect();
+
+      // socket.disconnect();
     };
   }, []);
 
-  if (!gameStarted) {
+  if (!gameStarted || !gameState) {
     return <p>Waiting for another player</p>;
   }
 
   return (
-    <GameProvider value={{ round, userData }}>
-      <Board />
+    <GameProvider value={{ gameState }}>
+      <Board socket={socket} />
+      {(gameOverModal.open && gameOverModal.winner) && <GameOverModal winner={gameOverModal.winner} open={gameOverModal.open} />}
     </GameProvider>
   );
 }

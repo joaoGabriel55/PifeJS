@@ -8,6 +8,11 @@ const http = {
   port: Env.number("PORT", 3000),
 };
 
+const auth = {
+  jwtSecret: Env.string("JWT_SECRET", "secret"),
+  jwtExpiration: Env.number("JWT_EXPIRATION", 12 * 60 * 60),
+}
+
 const db = {
   development: {
     client: "postgresql",
@@ -36,6 +41,7 @@ const config = {
   env,
   http,
   db,
+  auth,
 };
 
 type Config = typeof config;

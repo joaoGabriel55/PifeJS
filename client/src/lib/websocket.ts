@@ -1,10 +1,14 @@
 import { io, Socket } from "socket.io-client";
 
-export default class Websocket {
+class Websocket {
   private socket: Socket;
 
-  constructor() {
-    this.socket = io("http://localhost:3000");
+  constructor(query: Record<string, string> = {}) {
+    this.socket = io("http://localhost:3000", { autoConnect: false, query, auth: { token: localStorage.getItem("token") || "" } });
+  }
+
+  connect() {
+    this.socket.connect();
   }
 
   emit<T = unknown>({ key, value }: { key: string; value: T }) {
@@ -22,4 +26,8 @@ export default class Websocket {
   off(key: string) {
     this.socket.off(key);
   }
+}
+
+export const getSocket = (query?: Record<string, string>) => {
+  return new Websocket(query);
 }

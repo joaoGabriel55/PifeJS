@@ -6,6 +6,7 @@ import { RoomsRepository } from "../repositories/roomsRepository.js";
 import { MatchesRepository } from "../repositories/matchesRepository.js";
 import { RoundsRepository } from "../repositories/roundsRepository.js";
 import { matchesRoutes } from "../routes/matches.js";
+import cors from "cors";
 
 export const repositories = {
   usersRepository: UsersRepository,
@@ -14,10 +15,14 @@ export const repositories = {
   roundsRepository: RoundsRepository,
 } as const;
 
+export type Repositories = typeof repositories;
+
 const makeServer = () => {
   const app = express();
 
   app.use(express.json());
+
+  app.use(cors());
 
   app.use("/users", usersRoutes(repositories));
 

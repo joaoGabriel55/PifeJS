@@ -11,6 +11,23 @@ export const makeMatchesController = (
   matchesRepository: MatchesRepository,
   roundsRepository: RoundsRepository
 ) => {
+  const index = async (req: Request, res: Response) => {
+    const matchesService = new MatchService(
+      roomsRepository,
+      matchesRepository,
+      roundsRepository
+    );
+
+    const roomId = req.params.roomId;
+    try {
+      const matches = await matchesService.getAllByRoom(roomId);
+
+      res.json(matches);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  };
+
   const create = async (req: Request, res: Response) => {
     const matchesService = new MatchService(
       roomsRepository,
@@ -36,7 +53,35 @@ export const makeMatchesController = (
     }
   };
 
+  const getTopCard = async (req: Request, res: Response) => {
+    const matchesService = new MatchService(
+      roomsRepository,
+      matchesRepository,
+      roundsRepository
+    );
+
+    const { id } = req.params;
+
+    try {
+      const match = await matchesService.getById(id);
+
+      const topCard = matchesService.getTopCard(match);
+
+      res.json(topCard);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ message: error.message });
+      } else if (error instanceof Error) {
+        res.status(500).json({
+          message: error.message
+        });
+      }
+    }
+  }
+
   return {
     create,
+    index,
+    getTopCard,
   };
 };

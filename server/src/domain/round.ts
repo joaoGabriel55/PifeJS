@@ -5,20 +5,24 @@ import { DeckSchema } from "./deck.js";
 import { Match, MatchSchema, PLAYER_HAND_SIZE } from "./match.js";
 import { UuidSchema } from "./uuid.js";
 
-const PlayerActions = z.enum(["DRAW", "DISCARD"]);
+const PlayerActionsSchema = z.enum(["DRAW", "DISCARD"]);
+export type PlayerActions = z.infer<typeof PlayerActionsSchema>;
+
+const HandsSchema = z.array(
+  z.object({
+    player: UserSchema,
+    hand: z.array(CardSchema).max(9),
+  }));
+
+export type Hands = z.infer<typeof HandsSchema>;
 
 const BaseRoundSchema = z.object({
   id: UuidSchema,
-  playerAction: PlayerActions.optional(),
+  playerAction: PlayerActionsSchema.optional(),
   deck: DeckSchema,
   discardPile: z.array(CardSchema).default([]).optional(),
   currentPlayer: UserSchema,
-  hands: z.array(
-    z.object({
-      player: UserSchema,
-      hand: z.array(CardSchema).max(9),
-    })
-  ),
+  hands: HandsSchema,
   createdAt: z.date({ coerce: true }),
   updatedAt: z.date({ coerce: true }).optional(),
 });

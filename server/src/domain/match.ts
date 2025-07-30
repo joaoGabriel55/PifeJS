@@ -6,12 +6,13 @@ import { UuidSchema } from "./uuid.js";
 
 export const PLAYER_HAND_SIZE = 9;
 
-const MatchState = z.enum(["ONGOING", "FINISHED", "CANCELED"]);
+const MatchStateSchema = z.enum(["ONGOING", "FINISHED", "CANCELED"]);
+export type MatchState = z.infer<typeof MatchStateSchema>;
 
 const BaseMatchSchema = z.object({
   id: UuidSchema,
   room: RoomSchema,
-  state: MatchState.default("ONGOING").optional(),
+  state: MatchStateSchema.default("ONGOING").optional(),
   winner: UserSchema.optional(),
   createdAt: z.date({ coerce: true }),
   updatedAt: z.date({ coerce: true }).optional(),

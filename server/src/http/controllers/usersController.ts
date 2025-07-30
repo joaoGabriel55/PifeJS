@@ -3,6 +3,9 @@ import { UserService } from "../../services/usersService.js";
 import { NotFoundError } from "../../errors/notFoundError.js";
 import { CreateUserDto, UpdateUserDto } from "../../domain/user.js";
 import UsersRepository from "../../repositories/usersRepository.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { config } from "../../config.js";
 
 export const makeUsersController = (usersRepository: UsersRepository) => {
   const index = async (req: Request, res: Response) => {
@@ -94,11 +97,35 @@ export const makeUsersController = (usersRepository: UsersRepository) => {
     }
   };
 
+  const login = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const usersService = new UserService(usersRepository);
+
+    try {
+      const user = await usersService.getByEmail(email);
+
+      if (!user || !(await bcrypt.compare(password, user.encryptedPassword))) {
+        return res.status(401).send('Invalid credentials');
+      }
+
+      const token = jwt.sign({ userId: user.id }, config.auth.jwtSecret , { expiresIn: config.auth.jwtExpiration });
+
+      res.status(200).send({ token });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ message: error.message });
+      } else if (error instanceof Error) {
+        res.status(500).json({ message: error.message });
+      }
+    }
+  };
+
   return {
     index,
     show,
     create,
     update,
     destroy,
+    login
   };
 };

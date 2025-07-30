@@ -7,6 +7,7 @@ class UserModel extends Model {
   id!: string;
   email!: string;
   name?: string;
+  encryptedPassword!: string;
 
   ownedRooms?: RoomModel[];
   rooms?: RoomModel[];
@@ -17,6 +18,7 @@ class UserModel extends Model {
     properties: {
       id: { type: "string", format: "uuid" },
       email: { type: "string", format: "email" },
+      encryptedPassword: { type: "string" },
       name: { type: "string" },
     },
   };

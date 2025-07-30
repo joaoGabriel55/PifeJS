@@ -1,24 +1,32 @@
 import { ReactNode, useReducer } from "react";
-import { TRound } from "../../hooks/useRound";
 import { GameContext, GameDispatchContext } from "./GameContext";
 import { gameReducer } from "./GameReducer";
-import { GameState, MatchMeta } from "./types";
+import { GameState } from "./types";
+import { Source, TCard } from "../../components/card/CardDisplay";
+
+export const addSource = (source: Source) => (card: TCard) => {
+  return {
+    ...card,
+    source,
+  };
+};
 
 export function GameProvider({
   value,
   children,
 }: {
-  value: { round: TRound; userData: MatchMeta };
+  value: { gameState: GameState };
   children: ReactNode;
 }) {
-  const { round, userData } = value;
+  const { gameState } = value;
 
   const initialState: GameState = {
-    playerHand: round.hands[0].hand,
-    deck: round.deck,
-    discardPile: round.discardPile,
-    opponentHand: round.hands[1].hand,
-    userData,
+    hand: gameState.hand.map(addSource("PLAYER")),
+    deckSize: gameState.deckSize,
+    discardPile: gameState.discardPile?.map(addSource("DISCARD")) || [],
+    currentPlayer: gameState.currentPlayer,
+    connectedPlayer: gameState.connectedPlayer,
+    matchId: gameState.matchId
   };
 
   const [state, dispatch] = useReducer(gameReducer, initialState);

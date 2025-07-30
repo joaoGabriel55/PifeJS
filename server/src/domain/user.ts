@@ -7,9 +7,13 @@ export const UserSchema = z.object({
   email: z
     .string({ message: "Email is missing" })
     .email({ message: "Email is invalid" }),
+  encryptedPassword: z
+    .string({ message: "Password is missing" })
 });
 
-export const CreateUserDtoSchema = UserSchema.omit({ id: true });
+export const CreateUserDtoSchema = UserSchema.omit({ id: true, encryptedPassword: true }).strict().extend({
+  password: z.string({ message: "Password is missing" })});
+
 export type CreateUserDto = z.infer<typeof CreateUserDtoSchema>;
 
 export const UpdateUserDtoSchema = UserSchema.partial().strict();

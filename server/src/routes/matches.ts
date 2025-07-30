@@ -14,7 +14,9 @@ export function matchesRoutes({
     new roundsRepository()
   );
 
-  router.post("/", MatchesController.create);
+  router.post("/:roomId", MatchesController.create);
+
+  router.get("/:id/top-card", MatchesController.getTopCard);
 
   return router;
 }

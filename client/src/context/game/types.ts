@@ -1,12 +1,19 @@
 import { TCard } from "../../components/card/CardDisplay";
 
 export type GameState = {
-  playerHand: TCard[];
   deckSize: number;
   discardPile: TCard[];
-  opponentHand: TCard[];
-  userData: MatchMeta;
+  currentPlayer: Player;
+  hand: TCard[];
+  connectedPlayer: Player;
+  matchId: string;
 };
+
+export type Player = {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 export type MatchMeta = {
   userName: string;
@@ -19,11 +26,6 @@ export type GameAction =
       payload: { fromId: string; toId: string };
     }
   | {
-      type: "DRAW_FROM_DECK";
-      payload: { deckCardId: string; playerCardId: string };
-    }
-  | {
-      type: "DRAW_FROM_DISCARD";
-      payload: { discardCardId: string; playerCardId: string };
-    }
-  | { type: "DISCARD_FROM_DECK"; payload: { deckCardId: string } };
+      type: "UPDATE_GAME_STATE";
+      payload: GameState;
+    };

@@ -6,6 +6,9 @@ export async function up(knex: Knex): Promise<void> {
 
     table.jsonb("deck").notNullable();
     table.jsonb("hands").notNullable();
+    table.jsonb("discardPile").nullable();
+
+    table.string("playerAction").nullable();
 
     table.uuid("matchId").notNullable().references("id").inTable("matches");
     table.uuid("currentPlayerId").notNullable().references("id").inTable("users");
