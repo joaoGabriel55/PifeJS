@@ -49,8 +49,8 @@ export class SocketService {
           deckSize: lastRound.deck.length,
           discardPile: lastRound.discardPile,
           currentPlayer: lastRound.currentPlayer,
-          hand: lastRound.hands.find(hand => hand.player.id === userId)?.hand,
-          connectedPlayer: lastRound.hands.find(hand => hand.player.id !== userId)?.player,
+          hand: lastRound.hands.find(hand => hand.player.id === userId)!.hand,
+          connectedPlayer: lastRound.hands.find(hand => hand.player.id === userId)!.player,
           matchId: match.id,
           gameFinished: false,
           winner: null,
@@ -58,7 +58,6 @@ export class SocketService {
       });
     }
 
-    // "empresta" uma carta
     socket.on("drawCard", async (data) => {
       const { cardId } = data;
 
@@ -122,7 +121,6 @@ export class SocketService {
       });
     });
 
-    // "empresta" uma carta do descarte
     socket.on("drawDiscard", async (data) => {
       const { cardId } = data;
 
